@@ -41,11 +41,8 @@ export default function NotificationsPage() {
         prev.map((n) => n._id === notif._id ? { ...n, isRead: true } : n)
       );
     }
-    if (notif.type === 'duo_request' || notif.type === 'request_accepted') {
-      navigate('/dashboard');
-    } else if (notif.type === 'new_message') {
-      navigate('/chat');
-    }
+    if (notif.type === 'duo_request' || notif.type === 'request_accepted') navigate('/dashboard');
+    else if (notif.type === 'new_message') navigate('/chat');
   };
 
   const unread = notifications.filter((n) => !n.isRead).length;
@@ -54,10 +51,10 @@ export default function NotificationsPage() {
     <div className="p-6 max-w-2xl mx-auto animate-fade-in">
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="font-display font-bold text-2xl text-white tracking-wide flex items-center gap-2">
+          <h1 className="font-display font-bold text-2xl text-gray-900 tracking-wide flex items-center gap-2">
             🔔 NOTIFICATIONS
             {unread > 0 && (
-              <span className="bg-valo-red text-white text-sm rounded-full px-2 py-0.5 font-mono">
+              <span className="bg-pp-orange text-white text-sm rounded-full px-2 py-0.5 font-mono">
                 {unread}
               </span>
             )}
@@ -74,10 +71,10 @@ export default function NotificationsPage() {
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="card p-4 animate-pulse flex gap-3">
-              <div className="w-10 h-10 rounded-full bg-valo-dark-3" />
+              <div className="w-10 h-10 rounded-full bg-pp-input-bg" />
               <div className="flex-1 space-y-2">
-                <div className="h-4 bg-valo-dark-3 rounded w-3/4" />
-                <div className="h-3 bg-valo-dark-3 rounded w-1/2" />
+                <div className="h-4 bg-pp-input-bg rounded w-3/4" />
+                <div className="h-3 bg-pp-input-bg rounded w-1/2" />
               </div>
             </div>
           ))}
@@ -85,8 +82,8 @@ export default function NotificationsPage() {
       ) : notifications.length === 0 ? (
         <div className="card p-16 text-center">
           <div className="text-5xl mb-4">🔔</div>
-          <p className="text-gray-400">No notifications yet.</p>
-          <p className="text-gray-600 text-sm mt-1">Find a duo to get started!</p>
+          <p className="text-gray-500">No notifications yet.</p>
+          <p className="text-gray-400 text-sm mt-1">Find a duo to get started!</p>
         </div>
       ) : (
         <div className="space-y-2">
@@ -97,30 +94,30 @@ export default function NotificationsPage() {
               animate={{ opacity: 1, x: 0 }}
               transition={{ delay: i * 0.04 }}
               onClick={() => handleNotifClick(notif)}
-              className={`card p-4 flex items-start gap-4 cursor-pointer transition-all hover:border-valo-red/30 ${
-                !notif.isRead ? 'border-l-2 border-l-valo-red' : ''
+              className={`card p-4 flex items-start gap-4 cursor-pointer transition-all hover:shadow-md ${
+                !notif.isRead ? 'border-l-2 border-l-pp-orange' : ''
               }`}
             >
               <div className="flex-shrink-0">
                 {notif.sender?.avatar ? (
-                  <div className="w-10 h-10 rounded-full overflow-hidden border border-valo-border">
+                  <div className="w-10 h-10 rounded-full overflow-hidden border border-pp-border">
                     <img src={notif.sender.avatar} alt="" className="w-full h-full object-cover" />
                   </div>
                 ) : (
-                  <div className="w-10 h-10 rounded-full bg-valo-dark-3 border border-valo-border flex items-center justify-center text-xl">
+                  <div className="w-10 h-10 rounded-full bg-pp-input-bg border border-pp-border flex items-center justify-center text-xl">
                     {TYPE_ICON[notif.type]}
                   </div>
                 )}
               </div>
               <div className="flex-1 min-w-0">
-                <div className={`text-sm font-semibold ${notif.isRead ? 'text-gray-400' : 'text-white'}`}>
+                <div className={`text-sm font-semibold ${notif.isRead ? 'text-gray-500' : 'text-gray-900'}`}>
                   {notif.title}
                 </div>
                 <div className="text-xs text-gray-500 mt-0.5">{notif.message}</div>
-                <div className="text-xs text-gray-600 mt-1.5">{formatLastSeen(notif.createdAt)}</div>
+                <div className="text-xs text-gray-400 mt-1.5">{formatLastSeen(notif.createdAt)}</div>
               </div>
               {!notif.isRead && (
-                <div className="w-2 h-2 rounded-full bg-valo-red flex-shrink-0 mt-1.5" />
+                <div className="w-2 h-2 rounded-full bg-pp-orange flex-shrink-0 mt-1.5" />
               )}
             </motion.div>
           ))}

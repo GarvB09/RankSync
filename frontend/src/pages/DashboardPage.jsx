@@ -1,5 +1,5 @@
 /**
- * DashboardPage — Post-login home with stats, requests, quick actions
+ * DashboardPage
  */
 
 import { useEffect, useState } from 'react';
@@ -17,35 +17,29 @@ const StatCard = ({ label, value, sub, delay = 0 }) => (
     transition={{ delay }}
     className="card p-5"
   >
-    <div className="text-3xl font-display font-bold text-white">{value}</div>
-    <div className="text-sm font-semibold text-gray-400 mt-1">{label}</div>
-    {sub && <div className="text-xs text-gray-600 mt-0.5">{sub}</div>}
+    <div className="text-3xl font-display font-bold text-gray-900">{value}</div>
+    <div className="text-sm font-semibold text-gray-600 mt-1">{label}</div>
+    {sub && <div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
   </motion.div>
 );
 
 export default function DashboardPage() {
-  const { user, updateUser } = useAuthStore();
+  const { user } = useAuthStore();
   const navigate = useNavigate();
   const [connections, setConnections] = useState({ connections: [], receivedRequests: [], sentRequests: [] });
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     api.get('/users/connections')
       .then(({ data }) => setConnections(data))
-      .catch(() => {})
-      .finally(() => setLoading(false));
+      .catch(() => {});
   }, []);
 
   const handleAccept = async (userId) => {
     try {
       await api.post(`/users/request/${userId}/accept`);
       toast.success('Duo request accepted! 🎮');
-      // Refresh
       const { data } = await api.get('/users/connections');
       setConnections(data);
-    } catch {
-      toast.error('Failed to accept request');
-    }
+    } catch { toast.error('Failed to accept request'); }
   };
 
   const handleDecline = async (userId) => {
@@ -53,9 +47,7 @@ export default function DashboardPage() {
       await api.post(`/users/request/${userId}/decline`);
       const { data } = await api.get('/users/connections');
       setConnections(data);
-    } catch {
-      toast.error('Failed to decline request');
-    }
+    } catch { toast.error('Failed to decline request'); }
   };
 
   const profileComplete = user?.isProfileComplete;
@@ -65,37 +57,36 @@ export default function DashboardPage() {
       {/* Header */}
       <div className="flex items-start justify-between flex-wrap gap-4">
         <div>
-          <h1 className="font-display font-bold text-3xl text-white tracking-wide">
-            Welcome back, <span className="text-valo-red">{user?.username}</span>
+          <h1 className="font-display font-bold text-3xl text-gray-900 tracking-wide">
+            Welcome back, <span className="text-pp-orange">{user?.username}</span>
           </h1>
           <p className="text-gray-500 text-sm mt-1">
             {getRankEmoji(user?.rank)} {user?.rank || 'Unranked'} · {user?.region || 'No region set'}
           </p>
         </div>
         <Link to="/find-duo" className="btn-primary">
-          🎯 Find Duo
+          🎮 Find Duo
         </Link>
       </div>
 
       {/* Profile incomplete banner */}
       {!profileComplete && (
         <motion.div
-          initial={{ opacity: 0, x: -16 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="flex items-center justify-between p-4 bg-valo-red/10 border border-valo-red/30 rounded-lg"
+          initial={{ opacity: 0, x: -16 }} animate={{ opacity: 1, x: 0 }}
+          className="flex items-center justify-between p-4 bg-pp-orange-light border border-orange-200 rounded-2xl"
         >
           <div className="flex items-center gap-3">
-            <span className="text-valo-red text-xl">⚠️</span>
+            <span className="text-pp-orange text-xl">⚠️</span>
             <div>
-              <div className="font-semibold text-white text-sm">Complete your profile</div>
-              <div className="text-gray-400 text-xs">Link your Riot account and set your roles to appear in matchmaking</div>
+              <div className="font-semibold text-gray-900 text-sm">Complete your profile</div>
+              <div className="text-gray-500 text-xs">Link your Riot account and set your roles to appear in matchmaking</div>
             </div>
           </div>
           <Link to="/profile/edit" className="btn-primary text-xs px-4 py-2">Set Up Profile</Link>
         </motion.div>
       )}
 
-      {/* Stats grid */}
+      {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <StatCard label="Connections" value={connections.connections.length} sub="Active duos" delay={0.05} />
         <StatCard label="Pending" value={connections.receivedRequests.length} sub="Awaiting your reply" delay={0.1} />
@@ -106,9 +97,9 @@ export default function DashboardPage() {
       {/* Incoming requests */}
       {connections.receivedRequests.length > 0 && (
         <section>
-          <h2 className="font-display font-bold text-lg text-white tracking-wide mb-4 flex items-center gap-2">
-            <span className="text-valo-red">🤝</span> Duo Requests
-            <span className="ml-2 bg-valo-red text-white text-xs rounded-full px-2 py-0.5 font-mono">
+          <h2 className="font-display font-bold text-lg text-gray-900 tracking-wide mb-4 flex items-center gap-2">
+            🤝 Duo Requests
+            <span className="ml-2 bg-pp-orange text-white text-xs rounded-full px-2 py-0.5 font-mono">
               {connections.receivedRequests.length}
             </span>
           </h2>
@@ -121,34 +112,28 @@ export default function DashboardPage() {
                 transition={{ delay: i * 0.05 }}
                 className="card p-4 flex items-center gap-4"
               >
-                <div className="w-12 h-12 rounded-full bg-valo-dark-3 border border-valo-border flex items-center justify-center text-xl flex-shrink-0 overflow-hidden">
+                <div className="w-12 h-12 rounded-full bg-pp-input-bg border border-pp-border flex items-center justify-center text-xl flex-shrink-0 overflow-hidden">
                   {requester.avatar
                     ? <img src={requester.avatar} alt="" className="w-full h-full object-cover" />
-                    : requester.username[0].toUpperCase()
+                    : <span className="text-gray-600 font-bold">{requester.username[0].toUpperCase()}</span>
                   }
                 </div>
                 <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-white text-sm truncate">{requester.username}</div>
+                  <div className="font-semibold text-gray-900 text-sm truncate">{requester.username}</div>
                   <div className={`text-xs ${getRankColorClass(requester.rank)}`}>{requester.rank}</div>
                   <div className="flex gap-1.5 mt-2">
                     {requester.roles?.slice(0, 2).map((r) => (
-                      <span key={r} className="text-xs bg-valo-dark-3 text-gray-400 px-1.5 py-0.5 rounded">
+                      <span key={r} className="text-xs bg-pp-input-bg text-gray-500 px-1.5 py-0.5 rounded-full border border-pp-border">
                         {getRoleIcon(r)} {r}
                       </span>
                     ))}
                   </div>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <button
-                    onClick={() => handleAccept(requester._id)}
-                    className="text-xs bg-valo-red hover:bg-valo-red-dark text-white px-3 py-1.5 rounded font-semibold transition-colors"
-                  >
+                  <button onClick={() => handleAccept(requester._id)} className="text-xs bg-pp-orange hover:bg-pp-orange-dark text-white px-3 py-1.5 rounded-lg font-semibold transition-colors">
                     Accept
                   </button>
-                  <button
-                    onClick={() => handleDecline(requester._id)}
-                    className="text-xs bg-valo-dark-3 hover:bg-valo-border text-gray-400 hover:text-white px-3 py-1.5 rounded font-semibold transition-colors"
-                  >
+                  <button onClick={() => handleDecline(requester._id)} className="text-xs bg-pp-input-bg hover:bg-pp-border text-gray-500 hover:text-gray-800 px-3 py-1.5 rounded-lg font-semibold transition-colors border border-pp-border">
                     Decline
                   </button>
                 </div>
@@ -158,15 +143,15 @@ export default function DashboardPage() {
         </section>
       )}
 
-      {/* Active connections */}
+      {/* Connections */}
       <section>
-        <h2 className="font-display font-bold text-lg text-white tracking-wide mb-4 flex items-center gap-2">
-          <span>🎮</span> Your Duo Squad
+        <h2 className="font-display font-bold text-lg text-gray-900 tracking-wide mb-4 flex items-center gap-2">
+          🎮 Your Duo Squad
         </h2>
         {connections.connections.length === 0 ? (
           <div className="card p-12 text-center">
             <div className="text-5xl mb-4">🔍</div>
-            <p className="text-gray-400 mb-4">No connections yet.</p>
+            <p className="text-gray-500 mb-4">No connections yet.</p>
             <Link to="/find-duo" className="btn-primary inline-flex">Find Your First Duo</Link>
           </div>
         ) : (
@@ -182,17 +167,17 @@ export default function DashboardPage() {
               >
                 <div className="flex items-center gap-3 mb-3">
                   <div className="relative">
-                    <div className="w-10 h-10 rounded-full bg-valo-dark-3 border border-valo-border flex items-center justify-center overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-pp-input-bg border border-pp-border flex items-center justify-center overflow-hidden">
                       {conn.avatar
                         ? <img src={conn.avatar} alt="" className="w-full h-full object-cover" />
-                        : conn.username[0].toUpperCase()
+                        : <span className="text-gray-600 font-bold text-sm">{conn.username[0].toUpperCase()}</span>
                       }
                     </div>
-                    <span className={`absolute -bottom-0.5 -right-0.5 ${conn.isOnline ? 'status-online' : 'status-offline'}`} />
+                    <span className={`absolute -bottom-0.5 -right-0.5 ${conn.isOnline ? 'status-online' : 'status-offline'} border-2 border-white`} />
                   </div>
                   <div>
-                    <div className="font-semibold text-white text-sm">{conn.username}</div>
-                    <div className="text-xs text-gray-500">
+                    <div className="font-semibold text-gray-900 text-sm">{conn.username}</div>
+                    <div className="text-xs text-gray-400">
                       {conn.isOnline ? '🟢 Online' : `⚫ ${formatLastSeen(conn.lastSeen)}`}
                     </div>
                   </div>
@@ -206,11 +191,9 @@ export default function DashboardPage() {
                     try {
                       const { data } = await api.post(`/chat/start/${conn._id}`);
                       navigate(`/chat/${data.conversation._id}`);
-                    } catch {
-                      toast.error('Could not open conversation');
-                    }
+                    } catch { toast.error('Could not open conversation'); }
                   }}
-                  className="mt-3 w-full text-xs btn-secondary py-1.5"
+                  className="mt-3 w-full text-xs btn-secondary py-1.5 rounded-xl"
                 >
                   💬 Message
                 </button>
@@ -223,14 +206,14 @@ export default function DashboardPage() {
       {/* Quick actions */}
       <section className="grid sm:grid-cols-3 gap-4">
         {[
-          { icon: '🎯', title: 'Find Duo', desc: 'Search for teammates by rank & role', to: '/find-duo', color: 'border-valo-red/30 hover:border-valo-red' },
-          { icon: '✏️', title: 'Edit Profile', desc: 'Update your rank, roles, and availability', to: '/profile/edit', color: 'border-valo-border hover:border-valo-teal' },
-          { icon: '💬', title: 'Messages', desc: 'Chat with your connected duos', to: '/chat', color: 'border-valo-border hover:border-blue-500' },
-        ].map(({ icon, title, desc, to, color }) => (
-          <Link key={to} to={to} className={`card p-5 border ${color} transition-all duration-200 hover:scale-[1.02] group`}>
+          { icon: '🎮', title: 'Find Duo', desc: 'Browse players by rank & role', to: '/find-duo' },
+          { icon: '✏️', title: 'Edit Profile', desc: 'Update rank, roles, and availability', to: '/profile/edit' },
+          { icon: '💬', title: 'Messages', desc: 'Chat with your connected duos', to: '/chat' },
+        ].map(({ icon, title, desc, to }) => (
+          <Link key={to} to={to} className="card p-5 hover:border-pp-orange hover:shadow-md transition-all duration-200 hover:scale-[1.02] group">
             <div className="text-2xl mb-3">{icon}</div>
-            <div className="font-display font-bold text-white text-base">{title}</div>
-            <div className="text-gray-500 text-xs mt-1">{desc}</div>
+            <div className="font-display font-bold text-gray-900 text-base">{title}</div>
+            <div className="text-gray-400 text-xs mt-1">{desc}</div>
           </Link>
         ))}
       </section>

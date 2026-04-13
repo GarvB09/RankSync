@@ -1,17 +1,16 @@
 /**
- * ChatPage — Real-time DM system for connected players
+ * ChatPage — Real-time DM system
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import useAuthStore from '../context/authStore';
 import { useSocket } from '../hooks/useSocket';
 import api from '../utils/api';
-import { getRankColorClass, formatLastSeen } from '../utils/rankUtils';
+import { formatLastSeen } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
-// ─── Message bubble ───────────────────────────────────────────────────────────
 function MessageBubble({ message, isOwn }) {
   return (
     <motion.div
@@ -20,25 +19,23 @@ function MessageBubble({ message, isOwn }) {
       className={`flex items-end gap-2 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}
     >
       {!isOwn && (
-        <div className="w-7 h-7 rounded-full bg-valo-dark-3 border border-valo-border flex-shrink-0 flex items-center justify-center text-xs overflow-hidden">
+        <div className="w-7 h-7 rounded-full bg-pp-input-bg border border-pp-border flex-shrink-0 flex items-center justify-center text-xs overflow-hidden">
           {message.sender?.avatar
             ? <img src={message.sender.avatar} alt="" className="w-full h-full object-cover" />
-            : message.sender?.username?.[0]?.toUpperCase()
+            : <span className="text-gray-600 font-bold">{message.sender?.username?.[0]?.toUpperCase()}</span>
           }
         </div>
       )}
       <div className={`max-w-xs lg:max-w-md ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-        {!isOwn && (
-          <span className="text-xs text-gray-500 px-1">{message.sender?.username}</span>
-        )}
+        {!isOwn && <span className="text-xs text-gray-400 px-1">{message.sender?.username}</span>}
         <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
           isOwn
-            ? 'bg-valo-red text-white rounded-br-sm'
-            : 'bg-valo-dark-3 text-gray-200 border border-valo-border rounded-bl-sm'
+            ? 'bg-pp-orange text-white rounded-br-sm'
+            : 'bg-pp-input-bg text-gray-800 border border-pp-border rounded-bl-sm'
         }`}>
           {message.content}
         </div>
-        <span className="text-xs text-gray-600 px-1">
+        <span className="text-xs text-gray-400 px-1">
           {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
         </span>
       </div>
@@ -46,7 +43,6 @@ function MessageBubble({ message, isOwn }) {
   );
 }
 
-// ─── Conversation list item ───────────────────────────────────────────────────
 function ConversationItem({ conv, isActive, onClick, currentUserId }) {
   const other = conv.participants?.find((p) => p._id !== currentUserId);
   const lastMsg = conv.lastMessage;
@@ -54,31 +50,31 @@ function ConversationItem({ conv, isActive, onClick, currentUserId }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 p-3 rounded-lg transition-all text-left ${
+      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
         isActive
-          ? 'bg-valo-red/10 border border-valo-red/30'
-          : 'hover:bg-valo-dark-3 border border-transparent'
+          ? 'bg-pp-orange-light border border-orange-200'
+          : 'hover:bg-pp-input-bg border border-transparent'
       }`}
     >
       <div className="relative flex-shrink-0">
-        <div className="w-10 h-10 rounded-full bg-valo-dark-3 border border-valo-border flex items-center justify-center text-base overflow-hidden">
+        <div className="w-10 h-10 rounded-full bg-pp-input-bg border border-pp-border flex items-center justify-center text-base overflow-hidden">
           {other?.avatar
             ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
-            : other?.username?.[0]?.toUpperCase()
+            : <span className="text-gray-600 font-bold text-sm">{other?.username?.[0]?.toUpperCase()}</span>
           }
         </div>
-        <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-valo-dark ${other?.isOnline ? 'bg-green-400' : 'bg-gray-600'}`} />
+        <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${other?.isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
-          <span className="font-semibold text-sm text-white truncate">{other?.username}</span>
+          <span className="font-semibold text-sm text-gray-900 truncate">{other?.username}</span>
           {conv.unreadCount > 0 && (
-            <span className="bg-valo-red text-white text-xs rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 ml-1">
+            <span className="bg-pp-orange text-white text-xs rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 ml-1">
               {conv.unreadCount}
             </span>
           )}
         </div>
-        <div className="text-xs text-gray-500 truncate mt-0.5">
+        <div className="text-xs text-gray-400 truncate mt-0.5">
           {lastMsg?.content || 'Start chatting!'}
         </div>
       </div>
@@ -86,7 +82,6 @@ function ConversationItem({ conv, isActive, onClick, currentUserId }) {
   );
 }
 
-// ─── Main Chat page ───────────────────────────────────────────────────────────
 export default function ChatPage() {
   const { conversationId: paramConvId } = useParams();
   const { user } = useAuthStore();
@@ -110,7 +105,6 @@ export default function ChatPage() {
   const activeConv = conversations.find((c) => c._id === activeConvId);
   const partner = activeConv?.participants?.find((p) => p._id !== user?._id);
 
-  // ── Fetch conversations ──────────────────────────────────────────────────
   useEffect(() => {
     api.get('/chat/conversations')
       .then(({ data }) => setConversations(data.conversations))
@@ -118,33 +112,23 @@ export default function ChatPage() {
       .finally(() => setLoadingConvs(false));
   }, []);
 
-  // ── Fetch messages when conversation changes ─────────────────────────────
   useEffect(() => {
     if (!activeConvId) return;
     setLoadingMsgs(true);
     setMessages([]);
     emit('join_conversation', activeConvId);
-
     api.get(`/chat/${activeConvId}/messages`)
       .then(({ data }) => setMessages(data.messages))
       .catch(() => toast.error('Failed to load messages'))
       .finally(() => setLoadingMsgs(false));
-
     return () => emit('leave_conversation', activeConvId);
   }, [activeConvId]);
 
-  // ── Scroll to bottom ─────────────────────────────────────────────────────
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  useEffect(() => { messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' }); }, [messages]);
 
-  // ── Real-time message reception ──────────────────────────────────────────
   useEffect(() => {
     const cleanup = on('new_message', ({ message, conversationId }) => {
-      if (conversationId === activeConvId) {
-        setMessages((prev) => [...prev, message]);
-      }
-      // Update conversation preview
+      if (conversationId === activeConvId) setMessages((prev) => [...prev, message]);
       setConversations((prev) =>
         prev.map((c) => c._id === conversationId
           ? { ...c, lastMessage: message, unreadCount: c._id === activeConvId ? 0 : (c.unreadCount || 0) + 1 }
@@ -155,12 +139,10 @@ export default function ChatPage() {
     return cleanup;
   }, [on, activeConvId]);
 
-  // ── Real-time socket message (immediate echo from sender) ────────────────
   useEffect(() => {
     const cleanup = on('message_received', (msg) => {
       if (msg.conversationId === activeConvId) {
         setMessages((prev) => {
-          // Dedupe by tempId
           if (prev.some((m) => m.tempId === msg.tempId)) return prev;
           return [...prev, { ...msg, _id: msg.tempId || Date.now() }];
         });
@@ -169,23 +151,15 @@ export default function ChatPage() {
     return cleanup;
   }, [on, activeConvId]);
 
-  // ── Typing indicators ─────────────────────────────────────────────────────
   useEffect(() => {
-    const cleanup1 = on('typing', ({ conversationId }) => {
-      if (conversationId === activeConvId) setPartnerTyping(true);
-    });
-    const cleanup2 = on('stop_typing', ({ conversationId }) => {
-      if (conversationId === activeConvId) setPartnerTyping(false);
-    });
-    return () => { cleanup1?.(); cleanup2?.(); };
+    const c1 = on('typing', ({ conversationId }) => { if (conversationId === activeConvId) setPartnerTyping(true); });
+    const c2 = on('stop_typing', ({ conversationId }) => { if (conversationId === activeConvId) setPartnerTyping(false); });
+    return () => { c1?.(); c2?.(); };
   }, [on, activeConvId]);
 
   const handleInputChange = (e) => {
     setInput(e.target.value);
-    if (!typing) {
-      setTyping(true);
-      emit('typing_start', { conversationId: activeConvId });
-    }
+    if (!typing) { setTyping(true); emit('typing_start', { conversationId: activeConvId }); }
     clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
       setTyping(false);
@@ -196,11 +170,8 @@ export default function ChatPage() {
   const handleSend = async () => {
     const content = input.trim();
     if (!content || !activeConvId || sending) return;
-
     setInput('');
     emit('typing_stop', { conversationId: activeConvId });
-
-    // Optimistic add
     const tempMsg = {
       _id: `temp_${Date.now()}`,
       content,
@@ -209,7 +180,6 @@ export default function ChatPage() {
       optimistic: true,
     };
     setMessages((prev) => [...prev, tempMsg]);
-
     setSending(true);
     try {
       await api.post(`/chat/${activeConvId}/send`, { content });
@@ -217,16 +187,11 @@ export default function ChatPage() {
       toast.error('Message failed to send');
       setMessages((prev) => prev.filter((m) => m._id !== tempMsg._id));
       setInput(content);
-    } finally {
-      setSending(false);
-    }
+    } finally { setSending(false); }
   };
 
   const handleKeyDown = (e) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
-      e.preventDefault();
-      handleSend();
-    }
+    if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); handleSend(); }
   };
 
   const selectConversation = (convId) => {
@@ -237,23 +202,22 @@ export default function ChatPage() {
 
   return (
     <div className="flex h-full overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
-      {/* ── Conversation list ─────────────────────────────────────── */}
+      {/* Conversation list */}
       <aside className={`
-        flex-shrink-0 border-r border-valo-border flex flex-col bg-valo-card
+        flex-shrink-0 border-r border-pp-border flex flex-col bg-white
         ${activeConvId ? 'hidden sm:flex w-72' : 'flex w-full sm:w-72'}
       `}>
-        <div className="p-4 border-b border-valo-border">
-          <h2 className="font-display font-bold text-white tracking-wide">MESSAGES</h2>
+        <div className="p-4 border-b border-pp-border">
+          <h2 className="font-display font-bold text-gray-900 tracking-wide">MESSAGES</h2>
         </div>
-
         <div className="flex-1 overflow-y-auto p-2 space-y-1">
           {loadingConvs ? (
             Array.from({ length: 3 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 p-3 animate-pulse">
-                <div className="w-10 h-10 rounded-full bg-valo-dark-3" />
+                <div className="w-10 h-10 rounded-full bg-pp-input-bg" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-valo-dark-3 rounded w-2/3" />
-                  <div className="h-3 bg-valo-dark-3 rounded w-1/2" />
+                  <div className="h-3 bg-pp-input-bg rounded w-2/3" />
+                  <div className="h-3 bg-pp-input-bg rounded w-1/2" />
                 </div>
               </div>
             ))
@@ -261,7 +225,7 @@ export default function ChatPage() {
             <div className="text-center py-10 px-4">
               <div className="text-3xl mb-3">💬</div>
               <p className="text-gray-500 text-sm">No conversations yet.</p>
-              <p className="text-gray-600 text-xs mt-1">Connect with players to start chatting!</p>
+              <p className="text-gray-400 text-xs mt-1">Connect with players to start chatting!</p>
             </div>
           ) : (
             conversations.map((conv) => (
@@ -277,33 +241,28 @@ export default function ChatPage() {
         </div>
       </aside>
 
-      {/* ── Chat window ──────────────────────────────────────────── */}
+      {/* Chat window */}
       {activeConvId ? (
-        <div className="flex-1 flex flex-col min-w-0">
-          {/* Chat header */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-valo-border bg-valo-card flex-shrink-0">
-            <button
-              onClick={() => { setActiveConvId(null); navigate('/chat'); }}
-              className="sm:hidden text-gray-400 hover:text-white mr-1"
-            >
-              ←
-            </button>
+        <div className="flex-1 flex flex-col min-w-0 bg-pp-bg">
+          {/* Header */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-pp-border bg-white flex-shrink-0 shadow-sm">
+            <button onClick={() => { setActiveConvId(null); navigate('/chat'); }} className="sm:hidden text-gray-400 hover:text-gray-900 mr-1">←</button>
             {partner && (
               <>
                 <div className="relative">
-                  <div className="w-9 h-9 rounded-full bg-valo-dark-3 border border-valo-border flex items-center justify-center overflow-hidden">
+                  <div className="w-9 h-9 rounded-full bg-pp-input-bg border border-pp-border flex items-center justify-center overflow-hidden">
                     {partner.avatar
                       ? <img src={partner.avatar} alt="" className="w-full h-full object-cover" />
-                      : partner.username?.[0]?.toUpperCase()
+                      : <span className="text-gray-600 font-bold text-sm">{partner.username?.[0]?.toUpperCase()}</span>
                     }
                   </div>
-                  <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border border-valo-dark ${partner.isOnline ? 'bg-green-400' : 'bg-gray-600'}`} />
+                  <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${partner.isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
                 </div>
                 <div>
-                  <div className="font-semibold text-white text-sm">{partner.username}</div>
-                  <div className="text-xs text-gray-500">
+                  <div className="font-semibold text-gray-900 text-sm">{partner.username}</div>
+                  <div className="text-xs text-gray-400">
                     {partnerTyping
-                      ? <span className="text-valo-teal animate-pulse">typing...</span>
+                      ? <span className="text-pp-orange animate-pulse">typing...</span>
                       : partner.isOnline ? '🟢 Online' : `⚫ ${formatLastSeen(partner.lastSeen)}`
                     }
                   </div>
@@ -316,13 +275,13 @@ export default function ChatPage() {
           <div className="flex-1 overflow-y-auto p-4 space-y-3">
             {loadingMsgs ? (
               <div className="flex items-center justify-center h-full">
-                <div className="animate-spin w-6 h-6 border-2 border-valo-red border-t-transparent rounded-full" />
+                <div className="animate-spin w-6 h-6 border-2 border-pp-orange border-t-transparent rounded-full" />
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center">
                 <div className="text-4xl mb-3">👋</div>
-                <p className="text-gray-400 text-sm">Start your conversation with {partner?.username}!</p>
-                <p className="text-gray-600 text-xs mt-1">Good luck out there, duo!</p>
+                <p className="text-gray-600 text-sm">Start your conversation with {partner?.username}!</p>
+                <p className="text-gray-400 text-xs mt-1">Good luck out there, duo!</p>
               </div>
             ) : (
               messages.map((msg) => (
@@ -336,8 +295,8 @@ export default function ChatPage() {
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Message input */}
-          <div className="flex-shrink-0 p-4 border-t border-valo-border bg-valo-card">
+          {/* Input */}
+          <div className="flex-shrink-0 p-4 border-t border-pp-border bg-white">
             <div className="flex items-end gap-3">
               <textarea
                 ref={inputRef}
@@ -346,7 +305,7 @@ export default function ChatPage() {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder="Type a message... (Enter to send)"
-                className="input flex-1 resize-none min-h-[42px] max-h-28 py-2.5"
+                className="input flex-1 resize-none min-h-[42px] max-h-28 py-2.5 rounded-2xl"
                 style={{ height: 'auto' }}
                 onInput={(e) => {
                   e.target.style.height = 'auto';
@@ -356,7 +315,7 @@ export default function ChatPage() {
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || sending}
-                className="btn-primary p-2.5 aspect-square flex-shrink-0 disabled:opacity-40"
+                className="btn-primary p-2.5 aspect-square flex-shrink-0 disabled:opacity-40 rounded-xl"
               >
                 <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
@@ -366,12 +325,11 @@ export default function ChatPage() {
           </div>
         </div>
       ) : (
-        // Empty state for desktop
-        <div className="flex-1 hidden sm:flex items-center justify-center">
+        <div className="flex-1 hidden sm:flex items-center justify-center bg-pp-bg">
           <div className="text-center">
             <div className="text-6xl mb-4">💬</div>
-            <h3 className="font-display font-bold text-xl text-white mb-2">SELECT A CONVERSATION</h3>
-            <p className="text-gray-500 text-sm">Choose from the left to start chatting</p>
+            <h3 className="font-display font-bold text-xl text-gray-900 mb-2">SELECT A CONVERSATION</h3>
+            <p className="text-gray-400 text-sm">Choose from the left to start chatting</p>
           </div>
         </div>
       )}

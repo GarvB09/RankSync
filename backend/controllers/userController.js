@@ -183,14 +183,18 @@ exports.sendDuoRequest = async (req, res, next) => {
       User.findByIdAndUpdate(targetId, { $addToSet: { receivedRequests: senderId } }),
     ]);
 
+    const isSuperlike = req.body.superlike === true;
+
     // Create notification
     const notification = await Notification.create({
       recipient: targetId,
       sender: senderId,
       type: 'duo_request',
-      title: 'New Duo Request!',
-      message: `${sender.username} wants to duo with you!`,
-      data: { senderId: senderId, senderUsername: sender.username },
+      title: isSuperlike ? '⭐ Super Duo Request!' : 'New Duo Request!',
+      message: isSuperlike
+        ? `${sender.username} superliked you and really wants to duo!`
+        : `${sender.username} wants to duo with you!`,
+      data: { senderId: senderId, senderUsername: sender.username, superlike: isSuperlike },
     });
 
     // Emit real-time notification via socket
