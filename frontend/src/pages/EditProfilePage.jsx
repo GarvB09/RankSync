@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useAuthStore from '../context/authStore';
-import api from '../utils/api';
+import api, { API_URL } from '../utils/api';
 import {
   RANKS, REGIONS, ROLES, PLAYSTYLES, AGENTS,
   getRankColorClass, getRankEmoji,
@@ -174,7 +174,7 @@ export default function EditProfilePage() {
             <div className="relative flex-shrink-0">
               <div className="w-24 h-24 rounded-full bg-valo-dark-3 border-2 border-valo-border overflow-hidden flex items-center justify-center text-4xl font-bold text-white">
                 {avatarPreview || user?.avatar
-                  ? <img src={avatarPreview || (user?.avatar?.startsWith('/uploads') ? `http://localhost:5000${user.avatar}` : user.avatar)} alt="" className="w-full h-full object-cover" />
+                  ? <img src={avatarPreview || (user?.avatar?.startsWith('/uploads') ? `${API_URL}${user.avatar}` : user.avatar)} alt="" className="w-full h-full object-cover" />
                   : user?.username?.[0]?.toUpperCase()
                 }
               </div>

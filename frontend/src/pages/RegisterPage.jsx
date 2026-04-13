@@ -4,6 +4,7 @@
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { API_URL } from '../utils/api';
 import { motion } from 'framer-motion';
 import useAuthStore from '../context/authStore';
 import toast from 'react-hot-toast';
@@ -74,7 +75,7 @@ export default function RegisterPage() {
               <polygon points="20,10 30,20 20,30 10,20" fill="#0F1923" />
             </svg>
           </div>
-          <h1 className="font-display font-bold text-3xl text-white tracking-wide">FIND YOUR DUO</h1>
+          <h1 className="font-display font-bold text-3xl text-white tracking-wide">RANKSYNC</h1>
           <p className="text-gray-500 text-sm mt-1">Join thousands of Valorant players</p>
         </div>
 
@@ -82,7 +83,7 @@ export default function RegisterPage() {
           <h2 className="font-display font-bold text-xl text-white mb-6 tracking-wide">CREATE ACCOUNT</h2>
 
           <a
-            href="/api/auth/google"
+            href={`${API_URL}/api/auth/google`}
             className="flex items-center justify-center gap-3 w-full py-2.5 px-4 bg-valo-dark-2 border border-valo-border rounded hover:border-gray-500 transition-colors text-sm font-medium text-gray-300 hover:text-white mb-6"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">

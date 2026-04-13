@@ -8,7 +8,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import useAuthStore from '../../context/authStore';
 import { useSocket } from '../../hooks/useSocket';
 import { getRankColorClass, getRankEmoji } from '../../utils/rankUtils';
-import api from '../../utils/api';
+import api, { API_URL } from '../../utils/api';
 import toast from 'react-hot-toast';
 
 const NAV_ITEMS = [
@@ -76,8 +76,8 @@ export default function AppLayout() {
             </svg>
           </div>
           <div>
-            <div className="font-display font-bold text-lg leading-none text-white">FIND YOUR</div>
-            <div className="font-display font-bold text-lg leading-none text-valo-red">DUO</div>
+            <div className="font-display font-bold text-lg leading-none text-white">RANK</div>
+            <div className="font-display font-bold text-lg leading-none text-valo-red">SYNC</div>
           </div>
         </div>
 
@@ -90,7 +90,7 @@ export default function AppLayout() {
             <div className="relative flex-shrink-0">
               <div className="w-10 h-10 rounded-full bg-valo-dark-3 border-2 border-valo-border flex items-center justify-center text-lg overflow-hidden">
                 {user.avatar
-                  ? <img src={user.avatar} alt="" className="w-full h-full object-cover" />
+                  ? <img src={user.avatar.startsWith('/uploads') ? `${API_URL}${user.avatar}` : user.avatar} alt="" className="w-full h-full object-cover" />
                   : user.username[0].toUpperCase()
                 }
               </div>
@@ -157,7 +157,7 @@ export default function AppLayout() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <div className="font-display font-bold text-valo-red">FIND YOUR DUO</div>
+          <div className="font-display font-bold text-valo-red">RANKSYNC</div>
           <div className="w-8" />
         </header>
 

@@ -6,6 +6,8 @@ import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useAuthStore from '../context/authStore';
+import { API_URL } from '../utils/api';
+import LoginAgents from '../components/JettDash';
 import toast from 'react-hot-toast';
 
 export default function LoginPage() {
@@ -41,6 +43,9 @@ export default function LoginPage() {
       <div className="absolute inset-0 bg-grid-pattern opacity-20 pointer-events-none" />
       <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-valo-red/5 rounded-full blur-3xl pointer-events-none" />
 
+      {/* Agents sliding in from both sides */}
+      <LoginAgents />
+
       <motion.div
         initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
@@ -55,7 +60,7 @@ export default function LoginPage() {
               <polygon points="20,10 30,20 20,30 10,20" fill="#0F1923" />
             </svg>
           </div>
-          <h1 className="font-display font-bold text-3xl text-white tracking-wide">FIND YOUR DUO</h1>
+          <h1 className="font-display font-bold text-3xl text-white tracking-wide">RANKSYNC</h1>
           <p className="text-gray-500 text-sm mt-1">Sign in to find your perfect teammate</p>
         </div>
 
@@ -64,7 +69,7 @@ export default function LoginPage() {
 
           {/* Google OAuth */}
           <a
-            href="/api/auth/google"
+            href={`${API_URL}/api/auth/google`}
             className="flex items-center justify-center gap-3 w-full py-2.5 px-4 bg-valo-dark-2 border border-valo-border rounded hover:border-gray-500 transition-colors text-sm font-medium text-gray-300 hover:text-white mb-6"
           >
             <svg className="w-4 h-4" viewBox="0 0 24 24">
@@ -117,7 +122,7 @@ export default function LoginPage() {
           </form>
 
           <p className="text-center text-sm text-gray-500 mt-6">
-            New to Find Your Duo?{' '}
+            New to RankSync?{' '}
             <Link to="/register" className="text-valo-red hover:text-white transition-colors font-medium">
               Create account
             </Link>

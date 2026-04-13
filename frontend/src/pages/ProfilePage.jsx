@@ -6,7 +6,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useAuthStore from '../context/authStore';
-import api from '../utils/api';
+import api, { API_URL } from '../utils/api';
 import { getRankColorClass, getRankEmoji, getRoleIcon, formatLastSeen } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
@@ -121,7 +121,7 @@ export default function ProfilePage() {
           <div className="relative flex-shrink-0">
             <div className="w-20 h-20 rounded-full bg-valo-dark-3 border-2 border-valo-border flex items-center justify-center text-3xl font-bold overflow-hidden">
               {profile.avatar
-                ? <img src={profile.avatar.startsWith('/uploads') ? `http://localhost:5000${profile.avatar}` : profile.avatar} alt="" className="w-full h-full object-cover" />
+                ? <img src={profile.avatar.startsWith('/uploads') ? `${API_URL}${profile.avatar}` : profile.avatar} alt="" className="w-full h-full object-cover" />
                 : profile.username[0].toUpperCase()
               }
             </div>
@@ -266,7 +266,7 @@ export default function ProfilePage() {
               >
                 <div className="relative">
                   <div className="w-8 h-8 rounded-full bg-valo-dark-3 flex items-center justify-center text-sm overflow-hidden">
-                    {conn.avatar ? <img src={conn.avatar} alt="" className="w-full h-full object-cover" /> : conn.username[0].toUpperCase()}
+                    {conn.avatar ? <img src={conn.avatar.startsWith('/uploads') ? `${API_URL}${conn.avatar}` : conn.avatar} alt="" className="w-full h-full object-cover" /> : conn.username[0].toUpperCase()}
                   </div>
                   <span className={`absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full ${conn.isOnline ? 'bg-green-400' : 'bg-gray-600'}`} />
                 </div>

@@ -1,11 +1,17 @@
 /**
- * Axios instance configured for the Find Your Duo API
+ * Axios instance configured for the RankSync API
  */
 
 import axios from 'axios';
 
+// In production VITE_API_URL points to the Render backend.
+// In development the Vite proxy handles /api → localhost:5000.
+const BASE = import.meta.env.VITE_API_URL
+  ? `${import.meta.env.VITE_API_URL}/api`
+  : '/api';
+
 const api = axios.create({
-  baseURL: '/api',
+  baseURL: BASE,
   withCredentials: true,
   headers: { 'Content-Type': 'application/json' },
 });
@@ -15,8 +21,7 @@ api.interceptors.response.use(
   (res) => res,
   (error) => {
     if (error.response?.status === 401) {
-      // Clear auth state and redirect to login
-      localStorage.removeItem('fyd-auth');
+      localStorage.removeItem('ranksync-auth');
       delete api.defaults.headers.common['Authorization'];
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
@@ -27,3 +32,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+export const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';

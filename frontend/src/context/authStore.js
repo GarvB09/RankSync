@@ -85,7 +85,7 @@ const useAuthStore = create(
       },
     }),
     {
-      name: 'fyd-auth',
+      name: 'ranksync-auth',
       partialize: (state) => ({ token: state.token }),
       onRehydrateStorage: () => (state) => {
         // Re-attach token to axios on hydration
