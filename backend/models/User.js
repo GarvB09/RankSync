@@ -94,6 +94,12 @@ const userSchema = new mongoose.Schema(
       enum: [...REGIONS, null],
       default: null,
     },
+    city: {
+      type: String,
+      trim: true,
+      maxlength: [50, 'City cannot exceed 50 characters'],
+      default: null,
+    },
     peakRank: {
       type: String,
       enum: RANKS,

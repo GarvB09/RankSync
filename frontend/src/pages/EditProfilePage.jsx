@@ -28,6 +28,7 @@ export default function EditProfilePage() {
     age: '',
     gender: '',
     region: 'NA',
+    city: '',
     roles: [],
     playstyleTags: [],
     voiceChatPreference: 'preferred',
@@ -35,6 +36,10 @@ export default function EditProfilePage() {
     preferredRankMax: 'Gold 3',
     favoriteAgents: [],
   });
+
+  const [newUsername, setNewUsername] = useState('');
+  const [changingUsername, setChangingUsername] = useState(false);
+  const [savingUsername, setSavingUsername] = useState(false);
 
   const [riotInput, setRiotInput] = useState('');
   const [riotRank, setRiotRank] = useState('');
@@ -53,6 +58,7 @@ export default function EditProfilePage() {
         age: user.age || '',
         gender: user.gender || '',
         region: user.region || 'NA',
+        city: user.city || '',
         roles: user.roles || [],
         playstyleTags: user.playstyleTags || [],
         voiceChatPreference: user.voiceChatPreference || 'preferred',
@@ -101,6 +107,22 @@ export default function EditProfilePage() {
       setAvatarPreview(null);
     } finally {
       setUploadingAvatar(false);
+    }
+  };
+
+  const handleUsernameChange = async () => {
+    if (!newUsername.trim()) return;
+    setSavingUsername(true);
+    try {
+      const { data } = await api.put('/users/username', { username: newUsername.trim() });
+      updateUser(data.user);
+      setChangingUsername(false);
+      setNewUsername('');
+      toast.success('Username updated!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update username');
+    } finally {
+      setSavingUsername(false);
     }
   };
 
@@ -169,6 +191,57 @@ export default function EditProfilePage() {
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
+
+        {/* ── Username ──────────────────────────────────────────── */}
+        <section className="card p-6 space-y-4">
+          <h2 className="font-display font-bold text-lg text-white flex items-center gap-2">
+            <span>👤</span> Username
+          </h2>
+          {!changingUsername ? (
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="font-mono font-bold text-white text-base">@{user?.username}</div>
+                <div className="text-xs text-gray-500 mt-0.5">Your public display name</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setChangingUsername(true)}
+                className="btn-secondary text-xs px-4 py-2"
+              >
+                Change
+              </button>
+            </div>
+          ) : (
+            <div className="space-y-3">
+              <input
+                type="text"
+                className="input"
+                placeholder="New username (3–20 chars, letters/numbers/_)"
+                value={newUsername}
+                onChange={(e) => setNewUsername(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+                maxLength={20}
+              />
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleUsernameChange}
+                  disabled={savingUsername || !newUsername.trim()}
+                  className="btn-primary text-xs px-5 py-2 disabled:opacity-40"
+                >
+                  {savingUsername ? 'Saving...' : 'Save Username'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setChangingUsername(false); setNewUsername(''); }}
+                  className="btn-secondary text-xs px-4 py-2"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          )}
+        </section>
 
         {/* ── Profile Photo ─────────────────────────────────────── */}
         <section className="card p-6">
@@ -309,24 +382,37 @@ export default function EditProfilePage() {
             </div>
           )}
 
-          {/* Region */}
-          <div>
-            <label className="input-label">State</label>
-            <div className="flex gap-3 flex-wrap items-center">
-              <select
-                className="input flex-1 max-w-xs"
-                value={form.region}
-                onChange={(e) => setForm({ ...form, region: e.target.value })}
-              >
-                <option value="">— Select your state —</option>
-                {REGIONS.map((r) => (
-                  <option key={r} value={r}>{r}</option>
-                ))}
-              </select>
-              <div className="flex items-center gap-2 px-4 py-2 rounded border border-valo-border/40 bg-valo-dark-2 opacity-50 cursor-not-allowed select-none">
-                <span className="text-xs text-gray-500 font-display font-semibold tracking-wide uppercase">🌐 Cross Region</span>
-                <span className="text-xs bg-valo-red/20 text-valo-red border border-valo-red/30 px-2 py-0.5 rounded font-display font-semibold">Coming Soon</span>
+          {/* Region + City */}
+          <div className="space-y-3">
+            <div>
+              <label className="input-label">State</label>
+              <div className="flex gap-3 flex-wrap items-center">
+                <select
+                  className="input flex-1 max-w-xs"
+                  value={form.region}
+                  onChange={(e) => setForm({ ...form, region: e.target.value })}
+                >
+                  <option value="">— Select your state —</option>
+                  {REGIONS.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+                <div className="flex items-center gap-2 px-4 py-2 rounded border border-valo-border/40 bg-valo-dark-2 opacity-50 cursor-not-allowed select-none">
+                  <span className="text-xs text-gray-500 font-display font-semibold tracking-wide uppercase">🌐 Cross Region</span>
+                  <span className="text-xs bg-valo-red/20 text-valo-red border border-valo-red/30 px-2 py-0.5 rounded font-display font-semibold">Coming Soon</span>
+                </div>
               </div>
+            </div>
+            <div>
+              <label className="input-label">City <span className="text-gray-600 normal-case tracking-normal font-normal">(optional)</span></label>
+              <input
+                type="text"
+                className="input max-w-xs"
+                placeholder="e.g. Mumbai, Bengaluru..."
+                maxLength={50}
+                value={form.city}
+                onChange={(e) => setForm({ ...form, city: e.target.value })}
+              />
             </div>
           </div>
         </section>

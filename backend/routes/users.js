@@ -6,7 +6,7 @@ const { protect } = require('../middleware/auth');
 const {
   getProfile, updateProfile, findDuo,
   sendDuoRequest, acceptDuoRequest, declineDuoRequest, getConnections,
-  uploadAvatar,
+  uploadAvatar, changeUsername,
 } = require('../controllers/userController');
 
 // Multer config — store to disk, max 5MB, images only
@@ -31,6 +31,7 @@ router.get('/find-duo', protect, findDuo);
 router.get('/connections', protect, getConnections);
 router.get('/profile/:username', protect, getProfile);
 router.put('/profile', protect, updateProfile);
+router.put('/username', protect, changeUsername);
 router.post('/avatar', protect, upload.single('avatar'), uploadAvatar);
 router.post('/request/:userId', protect, sendDuoRequest);
 router.post('/request/:userId/accept', protect, acceptDuoRequest);

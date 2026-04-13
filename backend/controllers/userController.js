@@ -28,7 +28,7 @@ exports.getProfile = async (req, res, next) => {
 exports.updateProfile = async (req, res, next) => {
   try {
     const allowedFields = [
-      'bio', 'age', 'gender', 'region', 'roles', 'playstyleTags', 'voiceChatPreference',
+      'bio', 'age', 'gender', 'region', 'city', 'roles', 'playstyleTags', 'voiceChatPreference',
       'preferredRankMin', 'preferredRankMax', 'availability',
       'favoriteAgents', 'avatar',
     ];
@@ -73,6 +73,7 @@ exports.findDuo = async (req, res, next) => {
       role,
       playstyle,
       voiceChat,
+      gender,
       page = 1,
       limit = 12,
     } = req.query;
@@ -95,6 +96,9 @@ exports.findDuo = async (req, res, next) => {
 
     // Voice chat filter
     if (voiceChat) filter.voiceChatPreference = voiceChat;
+
+    // Gender filter
+    if (gender) filter.gender = gender;
 
     // Rank range filter using RANKS index
     if (rankMin || rankMax) {
@@ -276,6 +280,39 @@ exports.uploadAvatar = async (req, res, next) => {
     ).select('-password -googleId');
 
     res.json({ success: true, avatar, user: updatedUser });
+  } catch (error) {
+    next(error);
+  }
+};
+
+// ─── @PUT /api/users/username ─────────────────────────────────────────────────
+exports.changeUsername = async (req, res, next) => {
+  try {
+    const { username } = req.body;
+    if (!username) {
+      return res.status(400).json({ success: false, message: 'Username is required' });
+    }
+
+    const trimmed = username.trim();
+    if (trimmed.length < 3 || trimmed.length > 20) {
+      return res.status(400).json({ success: false, message: 'Username must be 3–20 characters' });
+    }
+    if (!/^[a-zA-Z0-9_]+$/.test(trimmed)) {
+      return res.status(400).json({ success: false, message: 'Username can only contain letters, numbers, and underscores' });
+    }
+
+    const existing = await User.findOne({ username: trimmed });
+    if (existing && existing._id.toString() !== req.user.id) {
+      return res.status(400).json({ success: false, message: 'Username already taken' });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: { username: trimmed } },
+      { new: true, runValidators: true }
+    ).select('-password -googleId');
+
+    res.json({ success: true, user: updatedUser });
   } catch (error) {
     next(error);
   }

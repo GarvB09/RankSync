@@ -334,12 +334,31 @@ function FilterPanel({ filters, onChange, onReset }) {
           <option value="never">Text Only</option>
         </select>
       </div>
+
+      <div>
+        <label className="input-label">Gender</label>
+        <div className="flex flex-wrap gap-1.5 mt-1">
+          {['Male', 'Female', 'Other'].map((g) => (
+            <button
+              key={g}
+              onClick={() => set('gender', filters.gender === g ? '' : g)}
+              className={`text-xs px-3 py-1.5 rounded border transition-all ${
+                filters.gender === g
+                  ? 'bg-valo-red/20 border-valo-red text-valo-red'
+                  : 'bg-valo-dark-2 border-valo-border text-gray-500 hover:border-gray-600 hover:text-white'
+              }`}
+            >
+              {g}
+            </button>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-const DEFAULT_FILTERS = { region: '', rankMin: '', rankMax: '', role: '', playstyle: '', voiceChat: '' };
+const DEFAULT_FILTERS = { region: '', rankMin: '', rankMax: '', role: '', playstyle: '', voiceChat: '', gender: '' };
 
 export default function FindDuoPage() {
   const [players, setPlayers] = useState([]);
