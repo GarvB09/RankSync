@@ -86,7 +86,7 @@ const useAuthStore = create(
     }),
     {
       name: 'ranksync-auth',
-      partialize: (state) => ({ token: state.token }),
+      partialize: (state) => ({ token: state.token, user: state.user, isAuthenticated: state.isAuthenticated }),
       onRehydrateStorage: () => (state) => {
         // Re-attach token to axios on hydration
         if (state?.token) {

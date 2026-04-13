@@ -264,19 +264,18 @@ exports.declineDuoRequest = async (req, res, next) => {
 // ─── @POST /api/users/avatar ──────────────────────────────────────────────────
 exports.uploadAvatar = async (req, res, next) => {
   try {
-    if (!req.file) {
-      return res.status(400).json({ success: false, message: 'No image file provided' });
+    const { avatar } = req.body;
+    if (!avatar || !avatar.startsWith('data:image/')) {
+      return res.status(400).json({ success: false, message: 'Invalid image data' });
     }
-
-    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
-      { $set: { avatar: avatarUrl } },
+      { $set: { avatar } },
       { new: true }
     ).select('-password -googleId');
 
-    res.json({ success: true, avatar: avatarUrl, user: updatedUser });
+    res.json({ success: true, avatar, user: updatedUser });
   } catch (error) {
     next(error);
   }

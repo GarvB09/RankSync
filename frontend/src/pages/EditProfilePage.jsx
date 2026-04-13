@@ -78,18 +78,21 @@ export default function EditProfilePage() {
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) {
-      toast.error('Image must be under 5MB');
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('Image must be under 2MB');
       return;
     }
-    setAvatarPreview(URL.createObjectURL(file));
     setUploadingAvatar(true);
     try {
-      const formData = new FormData();
-      formData.append('avatar', file);
-      const { data } = await api.post('/users/avatar', formData, {
-        headers: { 'Content-Type': 'multipart/form-data' },
+      // Convert to base64 so it persists in MongoDB (no filesystem dependency)
+      const base64 = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
       });
+      setAvatarPreview(base64);
+      const { data } = await api.post('/users/avatar', { avatar: base64 });
       updateUser({ avatar: data.avatar });
       toast.success('Profile photo updated!');
     } catch (err) {
