@@ -257,11 +257,15 @@ function FilterPanel({ filters, onChange, onReset }) {
       </div>
 
       <div>
-        <label className="input-label">Region</label>
+        <label className="input-label">State</label>
         <select className="input" value={filters.region} onChange={(e) => set('region', e.target.value)}>
-          <option value="">All Regions</option>
+          <option value="">All India</option>
           {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
+        <div className="mt-2 flex items-center gap-2 px-3 py-1.5 rounded border border-valo-border/30 bg-valo-dark-2 opacity-50">
+          <span className="text-xs text-gray-600">🌐 Cross Region</span>
+          <span className="text-xs text-valo-red font-display font-semibold">Coming Soon</span>
+        </div>
       </div>
 
       <div>

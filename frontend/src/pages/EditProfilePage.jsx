@@ -311,22 +311,22 @@ export default function EditProfilePage() {
 
           {/* Region */}
           <div>
-            <label className="input-label">Server / Region</label>
-            <div className="flex flex-wrap gap-2">
-              {REGIONS.map((r) => (
-                <button
-                  key={r}
-                  type="button"
-                  onClick={() => setForm({ ...form, region: r })}
-                  className={`px-4 py-2 rounded border text-sm font-display font-semibold tracking-wide transition-all ${
-                    form.region === r
-                      ? 'bg-valo-red/20 border-valo-red text-valo-red'
-                      : 'border-valo-border text-gray-400 hover:border-gray-500 hover:text-white'
-                  }`}
-                >
-                  {r}
-                </button>
-              ))}
+            <label className="input-label">State</label>
+            <div className="flex gap-3 flex-wrap items-center">
+              <select
+                className="input flex-1 max-w-xs"
+                value={form.region}
+                onChange={(e) => setForm({ ...form, region: e.target.value })}
+              >
+                <option value="">— Select your state —</option>
+                {REGIONS.map((r) => (
+                  <option key={r} value={r}>{r}</option>
+                ))}
+              </select>
+              <div className="flex items-center gap-2 px-4 py-2 rounded border border-valo-border/40 bg-valo-dark-2 opacity-50 cursor-not-allowed select-none">
+                <span className="text-xs text-gray-500 font-display font-semibold tracking-wide uppercase">🌐 Cross Region</span>
+                <span className="text-xs bg-valo-red/20 text-valo-red border border-valo-red/30 px-2 py-0.5 rounded font-display font-semibold">Coming Soon</span>
+              </div>
             </div>
           </div>
         </section>
