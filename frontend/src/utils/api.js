@@ -1,5 +1,6 @@
 /**
  * Axios instance configured for the RankSync API
+ * Production backend: https://ranksync.onrender.com
  */
 
 import axios from 'axios';
