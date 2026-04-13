@@ -7,6 +7,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import useAuthStore from './context/authStore';
 
 // Pages
+import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import OAuthSuccessPage from './pages/OAuthSuccessPage';
@@ -44,7 +45,7 @@ export default function App() {
   return (
     <Routes>
       {/* Public routes */}
-      <Route path="/" element={<Navigate to={isAuthenticated ? '/dashboard' : '/login'} replace />} />
+      <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
       <Route path="/login" element={<PublicRoute><LoginPage /></PublicRoute>} />
       <Route path="/register" element={<PublicRoute><RegisterPage /></PublicRoute>} />
       <Route path="/auth/oauth-success" element={<OAuthSuccessPage />} />

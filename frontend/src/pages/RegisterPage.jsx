@@ -75,8 +75,8 @@ export default function RegisterPage() {
               <polygon points="20,10 30,20 20,30 10,20" fill="#0F1923" />
             </svg>
           </div>
-          <h1 className="font-display font-bold text-3xl text-white tracking-wide">RANKSYNC</h1>
-          <p className="text-gray-500 text-sm mt-1">Join thousands of Valorant players</p>
+          <h1 className="font-hero text-4xl text-white uppercase">PLAYPAIR</h1>
+          <p className="text-gray-600 text-sm mt-1">Find your Valorant duo</p>
         </div>
 
         <div className="card p-8">

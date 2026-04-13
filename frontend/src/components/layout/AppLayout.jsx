@@ -76,8 +76,8 @@ export default function AppLayout() {
             </svg>
           </div>
           <div>
-            <div className="font-display font-bold text-lg leading-none text-white">RANK</div>
-            <div className="font-display font-bold text-lg leading-none text-valo-red">SYNC</div>
+            <div className="font-hero text-xl leading-none text-white uppercase">Play</div>
+            <div className="font-hero text-xl leading-none text-valo-red uppercase">Pair</div>
           </div>
         </div>
 
@@ -157,7 +157,7 @@ export default function AppLayout() {
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
             </svg>
           </button>
-          <div className="font-display font-bold text-valo-red">RANKSYNC</div>
+          <div className="font-hero text-xl text-valo-red uppercase">PlayPair</div>
           <div className="w-8" />
         </header>
 

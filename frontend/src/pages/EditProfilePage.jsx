@@ -26,6 +26,7 @@ export default function EditProfilePage() {
 
   const [form, setForm] = useState({
     bio: '',
+    age: '',
     region: 'NA',
     roles: [],
     playstyleTags: [],
@@ -49,6 +50,7 @@ export default function EditProfilePage() {
     if (user) {
       setForm({
         bio: user.bio || '',
+        age: user.age || '',
         region: user.region || 'NA',
         roles: user.roles || [],
         playstyleTags: user.playstyleTags || [],
@@ -330,6 +332,19 @@ export default function EditProfilePage() {
           <h2 className="font-display font-bold text-lg text-white flex items-center gap-2">
             <span>✍️</span> About You
           </h2>
+          <div>
+            <label className="input-label">Age</label>
+            <input
+              type="number"
+              min="18"
+              max="60"
+              className="input w-28"
+              placeholder="e.g. 21"
+              value={form.age}
+              onChange={(e) => setForm({ ...form, age: e.target.value })}
+            />
+          </div>
+
           <div>
             <label className="input-label">Bio <span className="text-gray-600 normal-case tracking-normal font-normal">(max 300 chars)</span></label>
             <textarea

@@ -1,5 +1,5 @@
 /**
- * FindDuoPage — Browse and filter players for matchmaking
+ * FindDuoPage — Hinge-style browse for finding duo partners
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -11,10 +11,11 @@ import {
 } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
-// ─── Player Card ──────────────────────────────────────────────────────────────
+// ─── Hinge-style Player Card ──────────────────────────────────────────────────
 function PlayerCard({ player, onRequest, index }) {
   const [status, setStatus] = useState(player.connectionStatus || 'none');
   const [sending, setSending] = useState(false);
+  const [passed, setPassed] = useState(false);
 
   const handleRequest = async () => {
     setSending(true);
@@ -23,150 +24,161 @@ function PlayerCard({ player, onRequest, index }) {
     setSending(false);
   };
 
-  const vcLabel = {
-    required: '🎙️ Voice Required',
-    preferred: '🎙️ Voice Preferred',
-    optional: '🎙️ Optional',
-    never: '💬 Text Only',
-  }[player.voiceChatPreference] || '';
+  if (passed) return null;
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: index * 0.04, duration: 0.35 }}
-      className="card-hover p-5 flex flex-col gap-4 relative overflow-hidden"
+      exit={{ opacity: 0, scale: 0.95 }}
+      transition={{ delay: index * 0.05, duration: 0.3 }}
+      className="bg-valo-card border border-valo-border rounded-xl overflow-hidden flex flex-col group hover:border-valo-border/60 transition-colors"
     >
-      {/* Online indicator strip */}
-      {player.isOnline && (
-        <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent" />
-      )}
+      {/* Photo / Avatar section */}
+      <div className="relative h-60 bg-valo-dark-3 overflow-hidden flex-shrink-0">
+        {player.isOnline && (
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent z-10" />
+        )}
 
-      {/* Header */}
-      <div className="flex items-start gap-3">
-        <div className="relative flex-shrink-0">
-          <div className="w-12 h-12 rounded-full bg-valo-dark-3 border-2 border-valo-border flex items-center justify-center text-xl font-bold overflow-hidden">
-            {player.avatar
-              ? <img src={player.avatar} alt="" className="w-full h-full object-cover" />
-              : player.username[0].toUpperCase()
-            }
+        {player.avatar ? (
+          <img
+            src={player.avatar}
+            alt=""
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <span className="font-hero text-[8rem] text-white/10 leading-none select-none">
+              {player.username[0].toUpperCase()}
+            </span>
           </div>
-          <span className={`absolute -bottom-0.5 -right-0.5 ${player.isOnline ? 'status-online' : 'status-offline'}`} />
+        )}
+
+        {/* Gradient overlay */}
+        <div className="absolute bottom-0 left-0 right-0 h-28 bg-gradient-to-t from-valo-card via-valo-card/60 to-transparent" />
+
+        {/* Online badge */}
+        {player.isOnline && (
+          <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/70 backdrop-blur-sm rounded-full px-2.5 py-1 z-10">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-400 animate-pulse" />
+            <span className="text-xs text-green-400 font-medium">Online</span>
+          </div>
+        )}
+
+        {/* Rank badge — bottom left of photo */}
+        <div className="absolute bottom-3 left-4 z-10">
+          <span className={`font-mono font-bold text-sm drop-shadow-lg ${getRankColorClass(player.rank)}`}>
+            {getRankEmoji(player.rank)} {player.rank}
+          </span>
         </div>
 
-        <div className="flex-1 min-w-0">
+        {/* Age badge — bottom right */}
+        {player.age && (
+          <div className="absolute bottom-3 right-4 z-10">
+            <span className="text-xs text-gray-300 bg-black/60 backdrop-blur-sm rounded px-2 py-0.5">
+              {player.age}
+            </span>
+          </div>
+        )}
+      </div>
+
+      {/* Info section */}
+      <div className="p-4 flex flex-col gap-3 flex-1">
+        <div>
           <div className="flex items-center gap-2">
-            <h3 className="font-display font-bold text-white text-base truncate">{player.username}</h3>
-            {player.isOnline && (
-              <span className="text-xs text-green-400 font-medium flex-shrink-0">● Online</span>
+            <h3 className="font-display font-bold text-white text-lg leading-tight">{player.username}</h3>
+            {!player.isOnline && (
+              <span className="text-xs text-gray-600">{formatLastSeen(player.lastSeen)}</span>
             )}
           </div>
           {player.riotId?.gameName && (
-            <div className="text-xs text-gray-500 font-mono truncate">
+            <div className="text-xs text-gray-600 font-mono mt-0.5">
               {player.riotId.gameName}#{player.riotId.tagLine}
+              <span className="mx-1.5 text-gray-700">·</span>
+              {player.region}
             </div>
           )}
-          <div className="flex items-center gap-2 mt-1">
-            <span className={`text-sm font-mono font-semibold ${getRankColorClass(player.rank)}`}>
-              {getRankEmoji(player.rank)} {player.rank}
-            </span>
-            <span className="text-gray-600">·</span>
-            <span className="text-xs text-gray-400">{player.region}</span>
-          </div>
         </div>
-      </div>
 
-      {/* Bio */}
-      {player.bio && (
-        <p className="text-xs text-gray-400 leading-relaxed line-clamp-2">{player.bio}</p>
-      )}
+        {player.bio && (
+          <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{player.bio}</p>
+        )}
 
-      {/* Roles */}
-      {player.roles?.length > 0 && (
+        {/* Tags */}
         <div className="flex flex-wrap gap-1.5">
-          {player.roles.map((r) => (
-            <span key={r} className="text-xs bg-valo-dark-3 text-gray-300 border border-valo-border px-2 py-0.5 rounded">
+          {player.roles?.slice(0, 2).map((r) => (
+            <span key={r} className="text-xs bg-valo-dark-3 text-gray-400 border border-valo-border px-2 py-0.5 rounded">
               {getRoleIcon(r)} {r}
             </span>
           ))}
-        </div>
-      )}
-
-      {/* Playstyle tags */}
-      {player.playstyleTags?.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {player.playstyleTags.map((tag) => (
+          {player.playstyleTags?.slice(0, 2).map((tag) => (
             <span key={tag} className="text-xs bg-valo-red/10 text-valo-red border border-valo-red/20 px-2 py-0.5 rounded">
               {tag}
             </span>
           ))}
         </div>
-      )}
-
-      {/* Footer */}
-      <div className="flex items-center justify-between pt-2 border-t border-valo-border">
-        <span className="text-xs text-gray-500">{vcLabel}</span>
-        {!player.isOnline && (
-          <span className="text-xs text-gray-600">{formatLastSeen(player.lastSeen)}</span>
-        )}
       </div>
 
-      {/* Action button */}
-      {status === 'none' && (
-        <button
-          onClick={handleRequest}
-          disabled={sending}
-          className="btn-primary w-full py-2 text-xs"
-        >
-          {sending ? 'Sending...' : '🤝 Send Duo Request'}
-        </button>
-      )}
-      {status === 'pending_sent' && (
-        <div className="w-full py-2 text-center text-xs text-gray-400 bg-valo-dark-2 rounded border border-valo-border">
-          ⏳ Request Sent
-        </div>
-      )}
-      {status === 'pending_received' && (
-        <div className="w-full py-2 text-center text-xs text-valo-teal bg-valo-teal/10 rounded border border-valo-teal/20">
-          📨 They sent you a request — check Dashboard!
-        </div>
-      )}
-      {status === 'connected' && (
-        <div className="w-full py-2 text-center text-xs text-green-400 bg-green-400/10 rounded border border-green-400/20">
-          ✅ Already Connected
-        </div>
-      )}
+      {/* Hinge-style action buttons */}
+      <div className="px-4 pb-4 flex gap-3">
+        {status === 'none' && (
+          <>
+            <button
+              onClick={handleRequest}
+              disabled={sending}
+              className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-lg bg-valo-red hover:bg-valo-red-dark transition-colors font-display font-bold text-sm tracking-wide text-white disabled:opacity-50"
+            >
+              {sending ? '...' : '❤️  Like'}
+            </button>
+            <button
+              onClick={() => setPassed(true)}
+              className="w-12 flex items-center justify-center rounded-lg border border-valo-border text-gray-600 hover:text-white hover:border-gray-600 transition-colors text-lg"
+            >
+              ✕
+            </button>
+          </>
+        )}
+        {status === 'pending_sent' && (
+          <div className="flex-1 py-2.5 text-center text-xs text-gray-500 bg-valo-dark-2 rounded-lg border border-valo-border">
+            ⏳ Request Sent
+          </div>
+        )}
+        {status === 'pending_received' && (
+          <div className="flex-1 py-2.5 text-center text-xs text-valo-teal bg-valo-teal/10 rounded-lg border border-valo-teal/20">
+            📨 Check Dashboard!
+          </div>
+        )}
+        {status === 'connected' && (
+          <div className="flex-1 py-2.5 text-center text-xs text-green-400 bg-green-400/10 rounded-lg border border-green-400/20">
+            ✅ Connected
+          </div>
+        )}
+      </div>
     </motion.div>
   );
 }
 
-// ─── Filter sidebar ───────────────────────────────────────────────────────────
+// ─── Filter Panel ─────────────────────────────────────────────────────────────
 function FilterPanel({ filters, onChange, onReset }) {
   const set = (key, val) => onChange({ ...filters, [key]: val });
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <h3 className="font-display font-bold text-white tracking-wide">FILTERS</h3>
-        <button onClick={onReset} className="text-xs text-gray-500 hover:text-valo-red transition-colors">
-          Reset all
+        <h3 className="font-display font-bold text-white text-sm tracking-widest uppercase">Filters</h3>
+        <button onClick={onReset} className="text-xs text-gray-600 hover:text-valo-red transition-colors">
+          Reset
         </button>
       </div>
 
-      {/* Region */}
       <div>
         <label className="input-label">Region</label>
-        <select
-          className="input"
-          value={filters.region}
-          onChange={(e) => set('region', e.target.value)}
-        >
+        <select className="input" value={filters.region} onChange={(e) => set('region', e.target.value)}>
           <option value="">All Regions</option>
           {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
       </div>
 
-      {/* Rank range */}
       <div>
         <label className="input-label">Min Rank</label>
         <select className="input" value={filters.rankMin} onChange={(e) => set('rankMin', e.target.value)}>
@@ -174,6 +186,7 @@ function FilterPanel({ filters, onChange, onReset }) {
           {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
         </select>
       </div>
+
       <div>
         <label className="input-label">Max Rank</label>
         <select className="input" value={filters.rankMax} onChange={(e) => set('rankMax', e.target.value)}>
@@ -182,7 +195,6 @@ function FilterPanel({ filters, onChange, onReset }) {
         </select>
       </div>
 
-      {/* Role */}
       <div>
         <label className="input-label">Role</label>
         <div className="space-y-1.5">
@@ -196,7 +208,7 @@ function FilterPanel({ filters, onChange, onReset }) {
                 onChange={() => set('role', filters.role === role ? '' : role)}
                 className="accent-valo-red"
               />
-              <span className="text-sm text-gray-400 group-hover:text-white transition-colors">
+              <span className="text-xs text-gray-500 group-hover:text-white transition-colors">
                 {getRoleIcon(role)} {role}
               </span>
             </label>
@@ -204,18 +216,17 @@ function FilterPanel({ filters, onChange, onReset }) {
         </div>
       </div>
 
-      {/* Playstyle */}
       <div>
         <label className="input-label">Playstyle</label>
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-1.5">
           {PLAYSTYLES.map((tag) => (
             <button
               key={tag}
               onClick={() => set('playstyle', filters.playstyle === tag ? '' : tag)}
-              className={`text-xs px-3 py-1.5 rounded border transition-all ${
+              className={`text-xs px-2.5 py-1 rounded border transition-all ${
                 filters.playstyle === tag
                   ? 'bg-valo-red/20 border-valo-red text-valo-red'
-                  : 'bg-valo-dark-2 border-valo-border text-gray-400 hover:border-gray-500'
+                  : 'bg-valo-dark-2 border-valo-border text-gray-500 hover:border-gray-600'
               }`}
             >
               {tag}
@@ -224,7 +235,6 @@ function FilterPanel({ filters, onChange, onReset }) {
         </div>
       </div>
 
-      {/* Voice chat */}
       <div>
         <label className="input-label">Voice Chat</label>
         <select className="input" value={filters.voiceChat} onChange={(e) => set('voiceChat', e.target.value)}>
@@ -269,7 +279,7 @@ export default function FindDuoPage() {
   const handleRequest = async (userId) => {
     try {
       await api.post(`/users/request/${userId}`);
-      toast.success('Duo request sent! 🎮');
+      toast.success('Duo request sent!');
       return { success: true };
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send request');
@@ -280,39 +290,38 @@ export default function FindDuoPage() {
   const activeFilterCount = Object.values(filters).filter(Boolean).length;
 
   return (
-    <div className="p-6 max-w-7xl mx-auto animate-fade-in">
+    <div className="p-6 max-w-6xl mx-auto animate-fade-in">
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
-          <h1 className="font-display font-bold text-3xl text-white tracking-wide flex items-center gap-3">
-            <span className="text-valo-red">🎯</span> FIND YOUR DUO
-          </h1>
-          <p className="text-gray-500 text-sm mt-1">
+          <h1 className="font-hero text-3xl text-white uppercase tracking-wide">Find Your Pair</h1>
+          <p className="text-gray-600 text-xs mt-1 font-display tracking-wide uppercase">
             {loading ? 'Searching...' : `${pagination.total} players found`}
           </p>
         </div>
         <button
           onClick={() => setShowFilters(!showFilters)}
-          className={`btn-secondary flex items-center gap-2 lg:hidden ${activeFilterCount > 0 ? 'border-valo-red text-valo-red' : ''}`}
+          className={`flex items-center gap-2 px-4 py-2 rounded border text-xs font-display font-semibold tracking-wide uppercase transition-all lg:hidden ${
+            activeFilterCount > 0 ? 'border-valo-red text-valo-red' : 'border-valo-border text-gray-500'
+          }`}
         >
-          <span>⚙️</span>
-          Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
+          ⚙️ Filters {activeFilterCount > 0 && `(${activeFilterCount})`}
         </button>
       </div>
 
       <div className="flex gap-6">
-        {/* Filter sidebar — desktop always visible, mobile toggleable */}
+        {/* Filter sidebar */}
         <aside className={`
-          flex-shrink-0 w-64
+          flex-shrink-0 w-56
           ${showFilters ? 'block' : 'hidden'} lg:block
           fixed lg:static inset-0 lg:inset-auto z-40 lg:z-auto
           bg-valo-dark lg:bg-transparent p-6 lg:p-0 overflow-y-auto
         `}>
           <div className="lg:hidden flex justify-between items-center mb-6">
-            <h2 className="font-display font-bold text-white">Filters</h2>
-            <button onClick={() => setShowFilters(false)} className="text-gray-400 hover:text-white">✕</button>
+            <h2 className="font-display font-bold text-white text-sm uppercase tracking-wider">Filters</h2>
+            <button onClick={() => setShowFilters(false)} className="text-gray-500 hover:text-white">✕</button>
           </div>
-          <div className="card p-5 sticky top-0">
+          <div className="bg-valo-card border border-valo-border rounded-xl p-5 sticky top-4">
             <FilterPanel
               filters={filters}
               onChange={setFilters}
@@ -324,55 +333,51 @@ export default function FindDuoPage() {
         {/* Player grid */}
         <div className="flex-1 min-w-0">
           {loading ? (
-            <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="grid sm:grid-cols-2 gap-5">
               {Array.from({ length: 6 }).map((_, i) => (
-                <div key={i} className="card p-5 h-64 animate-pulse">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-valo-dark-3" />
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-valo-dark-3 rounded w-3/4" />
-                      <div className="h-3 bg-valo-dark-3 rounded w-1/2" />
-                    </div>
-                  </div>
-                  <div className="space-y-2">
-                    <div className="h-3 bg-valo-dark-3 rounded" />
-                    <div className="h-3 bg-valo-dark-3 rounded w-4/5" />
+                <div key={i} className="bg-valo-card border border-valo-border rounded-xl overflow-hidden animate-pulse">
+                  <div className="h-60 bg-valo-dark-3" />
+                  <div className="p-4 space-y-3">
+                    <div className="h-4 bg-valo-dark-3 rounded w-1/2" />
+                    <div className="h-3 bg-valo-dark-3 rounded w-3/4" />
+                    <div className="h-3 bg-valo-dark-3 rounded w-1/3" />
                   </div>
                 </div>
               ))}
             </div>
           ) : players.length === 0 ? (
-            <div className="card p-16 text-center">
-              <div className="text-6xl mb-4">😔</div>
-              <h3 className="font-display font-bold text-xl text-white mb-2">No players found</h3>
-              <p className="text-gray-500 text-sm mb-6">Try adjusting your filters or check back later</p>
+            <div className="bg-valo-card border border-valo-border rounded-xl p-16 text-center">
+              <div className="text-5xl mb-4">😔</div>
+              <h3 className="font-display font-bold text-lg text-white mb-2">No players found</h3>
+              <p className="text-gray-600 text-sm mb-6">Try adjusting your filters or check back later</p>
               <button onClick={() => setFilters(DEFAULT_FILTERS)} className="btn-primary">Clear Filters</button>
             </div>
           ) : (
             <>
-              <div className="grid sm:grid-cols-2 xl:grid-cols-3 gap-4">
-                {players.map((player, i) => (
-                  <PlayerCard key={player._id} player={player} onRequest={handleRequest} index={i} />
-                ))}
-              </div>
+              <AnimatePresence>
+                <div className="grid sm:grid-cols-2 gap-5">
+                  {players.map((player, i) => (
+                    <PlayerCard key={player._id} player={player} onRequest={handleRequest} index={i} />
+                  ))}
+                </div>
+              </AnimatePresence>
 
-              {/* Pagination */}
               {pagination.pages > 1 && (
-                <div className="flex items-center justify-center gap-2 mt-8">
+                <div className="flex items-center justify-center gap-3 mt-8">
                   <button
                     onClick={() => fetchPlayers(pagination.page - 1)}
                     disabled={pagination.page === 1}
-                    className="btn-secondary px-4 py-2 disabled:opacity-40"
+                    className="btn-secondary px-5 py-2 text-xs disabled:opacity-30"
                   >
                     ← Prev
                   </button>
-                  <span className="text-sm text-gray-400 px-4">
-                    Page {pagination.page} of {pagination.pages}
+                  <span className="text-xs text-gray-600 px-3 font-display uppercase tracking-wide">
+                    {pagination.page} / {pagination.pages}
                   </span>
                   <button
                     onClick={() => fetchPlayers(pagination.page + 1)}
                     disabled={pagination.page === pagination.pages}
-                    className="btn-secondary px-4 py-2 disabled:opacity-40"
+                    className="btn-secondary px-5 py-2 text-xs disabled:opacity-30"
                   >
                     Next →
                   </button>

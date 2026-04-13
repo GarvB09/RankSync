@@ -129,6 +129,12 @@ const userSchema = new mongoose.Schema(
     },
 
     // Bio / Profile
+    age: {
+      type: Number,
+      min: 18,
+      max: 60,
+      default: null,
+    },
     bio: {
       type: String,
       maxlength: [300, 'Bio cannot exceed 300 characters'],
