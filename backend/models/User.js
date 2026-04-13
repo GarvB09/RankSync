@@ -135,6 +135,11 @@ const userSchema = new mongoose.Schema(
       max: 60,
       default: null,
     },
+    gender: {
+      type: String,
+      enum: ['Male', 'Female', 'Other'],
+      default: null,
+    },
     bio: {
       type: String,
       maxlength: [300, 'Bio cannot exceed 300 characters'],

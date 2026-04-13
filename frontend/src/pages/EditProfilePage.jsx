@@ -4,7 +4,6 @@
 
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
 import useAuthStore from '../context/authStore';
 import api, { API_URL } from '../utils/api';
 import {
@@ -27,6 +26,7 @@ export default function EditProfilePage() {
   const [form, setForm] = useState({
     bio: '',
     age: '',
+    gender: '',
     region: 'NA',
     roles: [],
     playstyleTags: [],
@@ -51,6 +51,7 @@ export default function EditProfilePage() {
       setForm({
         bio: user.bio || '',
         age: user.age || '',
+        gender: user.gender || '',
         region: user.region || 'NA',
         roles: user.roles || [],
         playstyleTags: user.playstyleTags || [],
@@ -335,17 +336,38 @@ export default function EditProfilePage() {
           <h2 className="font-display font-bold text-lg text-white flex items-center gap-2">
             <span>✍️</span> About You
           </h2>
-          <div>
-            <label className="input-label">Age</label>
-            <input
-              type="number"
-              min="18"
-              max="60"
-              className="input w-28"
-              placeholder="e.g. 21"
-              value={form.age}
-              onChange={(e) => setForm({ ...form, age: e.target.value })}
-            />
+          <div className="flex gap-8 flex-wrap">
+            <div>
+              <label className="input-label">Age</label>
+              <input
+                type="number"
+                min="18"
+                max="60"
+                className="input w-28"
+                placeholder="e.g. 21"
+                value={form.age}
+                onChange={(e) => setForm({ ...form, age: e.target.value })}
+              />
+            </div>
+            <div>
+              <label className="input-label">Gender</label>
+              <div className="flex gap-2 mt-1.5">
+                {['Male', 'Female', 'Other'].map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setForm({ ...form, gender: g })}
+                    className={`px-4 py-2 rounded border text-sm font-display font-semibold tracking-wide transition-all ${
+                      form.gender === g
+                        ? 'bg-valo-red/20 border-valo-red text-valo-red'
+                        : 'border-valo-border text-gray-400 hover:border-gray-500 hover:text-white'
+                    }`}
+                  >
+                    {g}
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           <div>
