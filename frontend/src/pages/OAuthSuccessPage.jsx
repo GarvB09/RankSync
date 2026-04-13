@@ -16,7 +16,7 @@ export default function OAuthSuccessPage() {
     } else {
       navigate('/login?error=oauth_failed');
     }
-  }, []);
+  }, [params, navigate, setToken, refreshUser]);
 
   return (
     <div className="min-h-screen bg-valo-dark flex items-center justify-center">
