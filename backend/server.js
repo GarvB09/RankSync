@@ -76,7 +76,10 @@ app.use('/api/chat', chatRoutes);
 app.use('/api/riot', riotRoutes);
 app.use('/api/notifications', notificationRoutes);
 
-// Health check
+// Root + Health check
+app.get('/', (_req, res) => {
+  res.json({ status: 'ok', app: 'RankSync API', version: '1.0.0' });
+});
 app.get('/api/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
