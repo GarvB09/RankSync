@@ -36,9 +36,12 @@ export default function EditProfilePage() {
   });
 
   const [riotInput, setRiotInput] = useState('');
+  const [riotRank, setRiotRank] = useState('');
   const [linking, setLinking] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [changingRiot, setChangingRiot] = useState(false);
+  const [avatarPreview, setAvatarPreview] = useState(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [saving, setSaving] = useState(false);
 
   // Hydrate from user data
@@ -70,6 +73,31 @@ export default function EditProfilePage() {
     });
   };
 
+  const handleAvatarUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Image must be under 5MB');
+      return;
+    }
+    setAvatarPreview(URL.createObjectURL(file));
+    setUploadingAvatar(true);
+    try {
+      const formData = new FormData();
+      formData.append('avatar', file);
+      const { data } = await api.post('/users/avatar', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      });
+      updateUser({ avatar: data.avatar });
+      toast.success('Profile photo updated!');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to upload photo');
+      setAvatarPreview(null);
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   const handleSave = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -91,11 +119,16 @@ export default function EditProfilePage() {
       toast.error('Enter your Riot ID in Name#TAG format (e.g. TenZ#NA1)');
       return;
     }
+    if (!riotRank) {
+      toast.error('Select your current rank');
+      return;
+    }
     setLinking(true);
     try {
-      const { data } = await api.post('/riot/link', { gameName: parts[0], tagLine: parts[1] });
+      const { data } = await api.post('/riot/link', { gameName: parts[0], tagLine: parts[1], rank: riotRank });
       updateUser(data.user);
       setChangingRiot(false);
+      setRiotRank('');
       toast.success(data.message);
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to link Riot account');
@@ -130,6 +163,43 @@ export default function EditProfilePage() {
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
+
+        {/* ── Profile Photo ─────────────────────────────────────── */}
+        <section className="card p-6">
+          <h2 className="font-display font-bold text-lg text-white flex items-center gap-2 mb-4">
+            <span>📷</span> Profile Photo
+          </h2>
+          <div className="flex items-center gap-6">
+            {/* Avatar preview */}
+            <div className="relative flex-shrink-0">
+              <div className="w-24 h-24 rounded-full bg-valo-dark-3 border-2 border-valo-border overflow-hidden flex items-center justify-center text-4xl font-bold text-white">
+                {avatarPreview || user?.avatar
+                  ? <img src={avatarPreview || (user?.avatar?.startsWith('/uploads') ? `http://localhost:5000${user.avatar}` : user.avatar)} alt="" className="w-full h-full object-cover" />
+                  : user?.username?.[0]?.toUpperCase()
+                }
+              </div>
+              {uploadingAvatar && (
+                <div className="absolute inset-0 rounded-full bg-black/60 flex items-center justify-center">
+                  <div className="w-5 h-5 border-2 border-valo-red border-t-transparent rounded-full animate-spin" />
+                </div>
+              )}
+            </div>
+            {/* Upload button */}
+            <div className="space-y-2">
+              <label className={`btn-primary text-sm px-4 py-2 cursor-pointer inline-block ${uploadingAvatar ? 'opacity-50 pointer-events-none' : ''}`}>
+                {uploadingAvatar ? 'Uploading...' : '📤 Upload Photo'}
+                <input
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleAvatarUpload}
+                  disabled={uploadingAvatar}
+                />
+              </label>
+              <p className="text-xs text-gray-500">JPG, PNG or GIF · Max 5MB</p>
+            </div>
+          </div>
+        </section>
 
         {/* ── Riot Account ──────────────────────────────────────── */}
         <section className="card p-6 space-y-4">
@@ -189,24 +259,14 @@ export default function EditProfilePage() {
                 Enter your Riot ID to verify your account and pull your real rank directly from Riot.
               </p>
               <div className="flex gap-2">
-                <div className="relative flex-1">
-                  <input
-                    type="text"
-                    className="input w-full pr-4"
-                    placeholder="GameName#TAG  (e.g. TenZ#NA1)"
-                    value={riotInput}
-                    onChange={(e) => setRiotInput(e.target.value)}
-                    onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleLinkRiot())}
-                  />
-                </div>
-                <button
-                  type="button"
-                  onClick={handleLinkRiot}
-                  disabled={linking}
-                  className="btn-primary whitespace-nowrap px-5"
-                >
-                  {linking ? 'Verifying...' : '✓ Verify Account'}
-                </button>
+                <input
+                  type="text"
+                  className="input flex-1"
+                  placeholder="GameName#TAG  (e.g. TenZ#NA1)"
+                  value={riotInput}
+                  onChange={(e) => setRiotInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && e.preventDefault()}
+                />
                 {changingRiot && (
                   <button
                     type="button"
@@ -217,8 +277,28 @@ export default function EditProfilePage() {
                   </button>
                 )}
               </div>
+              <div className="flex gap-2 items-center">
+                <select
+                  className="input flex-1"
+                  value={riotRank}
+                  onChange={(e) => setRiotRank(e.target.value)}
+                >
+                  <option value="">— Select your current rank —</option>
+                  {RANKS.map((r) => (
+                    <option key={r} value={r}>{r}</option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={handleLinkRiot}
+                  disabled={linking}
+                  className="btn-primary whitespace-nowrap px-5"
+                >
+                  {linking ? 'Verifying...' : '✓ Verify Account'}
+                </button>
+              </div>
               <p className="text-xs text-gray-500">
-                Your Riot ID is your in-game name. Find it in the Valorant client top-right corner.
+                We verify your Riot ID is real, then save the rank you select. Find your Riot ID in the Valorant client top-right corner.
               </p>
             </div>
           )}

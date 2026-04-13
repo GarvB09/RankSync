@@ -121,7 +121,7 @@ export default function ProfilePage() {
           <div className="relative flex-shrink-0">
             <div className="w-20 h-20 rounded-full bg-valo-dark-3 border-2 border-valo-border flex items-center justify-center text-3xl font-bold overflow-hidden">
               {profile.avatar
-                ? <img src={profile.avatar} alt="" className="w-full h-full object-cover" />
+                ? <img src={profile.avatar.startsWith('/uploads') ? `http://localhost:5000${profile.avatar}` : profile.avatar} alt="" className="w-full h-full object-cover" />
                 : profile.username[0].toUpperCase()
               }
             </div>

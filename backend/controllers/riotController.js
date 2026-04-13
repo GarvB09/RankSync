@@ -24,20 +24,19 @@ const ROUTING = { NA: 'americas', EU: 'europe', AP: 'asia', KR: 'asia', BR: 'ame
 const PLATFORM = { NA: 'na', EU: 'eu', AP: 'ap', KR: 'kr', BR: 'br', LATAM: 'latam' };
 
 /**
- * Calls Riot API to verify an account and fetch real rank.
- * Flow: Account-V1 (PUUID) → VAL-MATCH-V1 (match list) → extract competitiveTier
- * Returns { puuid, rank, verified } or { notFound: true } or null on error.
+ * Verifies a Riot account exists via Account-V1 and returns the PUUID.
+ * Note: Riot's VAL-MATCH-V1 requires player OAuth (RSO) — rank cannot be
+ * fetched server-side with a dev key. Account existence is all we can confirm.
+ * Returns { puuid, verified: true } or { notFound: true } or null on API error.
  */
-const fetchRiotData = async (gameName, tagLine, region = 'NA') => {
+const verifyRiotAccount = async (gameName, tagLine, region = 'NA') => {
   const apiKey = process.env.RIOT_API_KEY;
   if (!apiKey) return null;
 
   const routing = ROUTING[region] || 'americas';
-  const platform = PLATFORM[region] || 'na';
   const headers = { 'X-Riot-Token': apiKey };
 
   try {
-    // Step 1: Verify account exists and get PUUID
     const accountRes = await fetch(
       `https://${routing}.api.riotgames.com/riot/account/v1/accounts/by-riot-id/${encodeURIComponent(gameName)}/${encodeURIComponent(tagLine)}`,
       { headers }
@@ -47,38 +46,7 @@ const fetchRiotData = async (gameName, tagLine, region = 'NA') => {
     if (!accountRes.ok) return null;
 
     const { puuid } = await accountRes.json();
-
-    // Step 2: Fetch recent match list
-    const matchListRes = await fetch(
-      `https://${platform}.api.riotgames.com/val/match/v1/matchlists/by-puuid/${puuid}`,
-      { headers }
-    );
-
-    if (!matchListRes.ok) {
-      // Account is real but no match history accessible — still verified
-      return { puuid, verified: true, rank: null };
-    }
-
-    const { history = [] } = await matchListRes.json();
-
-    // Step 3: Walk recent matches until we find a ranked one
-    for (const { matchId } of history.slice(0, 10)) {
-      const matchRes = await fetch(
-        `https://${platform}.api.riotgames.com/val/match/v1/matches/${matchId}`,
-        { headers }
-      );
-      if (!matchRes.ok) continue;
-
-      const match = await matchRes.json();
-      if (!match.matchInfo?.isRanked) continue;
-
-      const player = (match.players || []).find((p) => p.puuid === puuid);
-      const rank = player?.competitiveTier ? TIER_TO_RANK[player.competitiveTier] : null;
-      if (rank) return { puuid, verified: true, rank };
-    }
-
-    // Account verified but no ranked match found (unranked / placement)
-    return { puuid, verified: true, rank: null };
+    return { puuid, verified: true };
   } catch {
     return null;
   }
@@ -87,7 +55,7 @@ const fetchRiotData = async (gameName, tagLine, region = 'NA') => {
 // ─── @POST /api/riot/link ─────────────────────────────────────────────────────
 exports.linkRiotAccount = async (req, res, next) => {
   try {
-    const { gameName, tagLine } = req.body;
+    const { gameName, tagLine, rank } = req.body;
 
     if (!gameName || !tagLine) {
       return res.status(400).json({ success: false, message: 'Riot ID (name#tag) is required' });
@@ -96,7 +64,7 @@ exports.linkRiotAccount = async (req, res, next) => {
     const user = await User.findById(req.user.id);
     const region = user.region || 'NA';
 
-    const data = await fetchRiotData(gameName, tagLine, region);
+    const data = await verifyRiotAccount(gameName, tagLine, region);
 
     if (data?.notFound) {
       return res.status(404).json({
@@ -105,13 +73,13 @@ exports.linkRiotAccount = async (req, res, next) => {
       });
     }
 
-    // Build the update — always save the Riot ID and PUUID; use real rank if found
     const update = {
       'riotId.gameName': gameName,
       'riotId.tagLine': tagLine,
       riotVerified: !!(data?.verified),
       ...(data?.puuid && { riotPuuid: data.puuid }),
-      ...(data?.rank && { rank: data.rank }),
+      // Use the rank the player provided, fall back to their existing rank
+      ...(rank && { rank }),
     };
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -120,21 +88,13 @@ exports.linkRiotAccount = async (req, res, next) => {
       { new: true }
     ).select('-password -googleId');
 
-    const apiAvailable = data !== null;
-    const rankFetched = !!(data?.rank);
-
     res.json({
       success: true,
       user: updatedUser,
       riotVerified: update.riotVerified,
-      rank: data?.rank || null,
-      message: !apiAvailable
-        ? 'Riot account linked (API unavailable — rank not verified)'
-        : data?.notFound
-        ? 'Riot account not found'
-        : rankFetched
-        ? `Account verified! Rank set to ${data.rank}.`
-        : 'Account verified! No ranked matches found yet — rank unchanged.',
+      message: data?.verified
+        ? 'Riot account verified! Your rank has been saved.'
+        : 'Riot account linked (could not reach Riot API — account unverified).',
     });
   } catch (error) {
     next(error);
@@ -147,58 +107,45 @@ exports.getRank = async (req, res, next) => {
     const { gameName, tagLine } = req.params;
     const region = req.query.region || 'NA';
 
-    const data = await fetchRiotData(gameName, tagLine, region);
+    const data = await verifyRiotAccount(gameName, tagLine, region);
 
     if (data?.notFound) {
       return res.status(404).json({ success: false, message: 'Riot account not found' });
     }
 
-    res.json({
-      success: true,
-      verified: !!(data?.verified),
-      rank: data?.rank || null,
-      puuid: data?.puuid || null,
-    });
+    res.json({ success: true, verified: !!(data?.verified), puuid: data?.puuid || null });
   } catch (error) {
     next(error);
   }
 };
 
 // ─── @POST /api/riot/refresh ──────────────────────────────────────────────────
+// Re-verifies the linked account is still valid (account not deleted/renamed)
 exports.refreshRank = async (req, res, next) => {
   try {
     const user = await User.findById(req.user.id);
 
     if (!user.riotId?.gameName) {
-      return res.status(400).json({
-        success: false,
-        message: 'No Riot account linked. Please link your account first.',
-      });
+      return res.status(400).json({ success: false, message: 'No Riot account linked.' });
     }
 
-    const data = await fetchRiotData(user.riotId.gameName, user.riotId.tagLine, user.region);
+    const data = await verifyRiotAccount(user.riotId.gameName, user.riotId.tagLine, user.region);
 
     if (data?.notFound) {
       return res.status(404).json({ success: false, message: 'Linked Riot account no longer exists' });
     }
 
-    const update = {
-      riotVerified: !!(data?.verified),
-      ...(data?.rank && { rank: data.rank }),
-    };
-
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
-      { $set: update },
+      { $set: { riotVerified: !!(data?.verified) } },
       { new: true }
     ).select('-password -googleId');
 
     res.json({
       success: true,
-      rank: data?.rank || user.rank,
-      riotVerified: update.riotVerified,
+      riotVerified: !!(data?.verified),
       user: updatedUser,
-      message: data?.rank ? `Rank updated to ${data.rank}!` : 'Account re-verified. No new ranked matches found.',
+      message: 'Riot account re-verified!',
     });
   } catch (error) {
     next(error);

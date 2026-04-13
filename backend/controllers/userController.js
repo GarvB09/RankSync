@@ -261,6 +261,27 @@ exports.declineDuoRequest = async (req, res, next) => {
   }
 };
 
+// ─── @POST /api/users/avatar ──────────────────────────────────────────────────
+exports.uploadAvatar = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: 'No image file provided' });
+    }
+
+    const avatarUrl = `/uploads/avatars/${req.file.filename}`;
+
+    const updatedUser = await User.findByIdAndUpdate(
+      req.user.id,
+      { $set: { avatar: avatarUrl } },
+      { new: true }
+    ).select('-password -googleId');
+
+    res.json({ success: true, avatar: avatarUrl, user: updatedUser });
+  } catch (error) {
+    next(error);
+  }
+};
+
 // ─── @GET /api/users/connections ─────────────────────────────────────────────
 exports.getConnections = async (req, res, next) => {
   try {

@@ -13,6 +13,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const passport = require('passport');
+const path = require('path');
 require('dotenv').config();
 
 const connectDB = require('./config/db');
@@ -64,6 +65,7 @@ app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(passport.initialize());
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use('/api/', limiter);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
