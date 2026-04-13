@@ -1,0 +1,114 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    @apply bg-valo-dark text-white font-body antialiased;
+    background-image:
+      radial-gradient(ellipse at 20% 50%, rgba(255,70,85,0.04) 0%, transparent 50%),
+      radial-gradient(ellipse at 80% 20%, rgba(0,212,170,0.03) 0%, transparent 40%);
+  }
+
+  /* Custom scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { @apply bg-valo-dark-2; }
+  ::-webkit-scrollbar-thumb { @apply bg-valo-border rounded-full; }
+  ::-webkit-scrollbar-thumb:hover { @apply bg-valo-red; }
+
+  ::selection { @apply bg-valo-red/30 text-white; }
+}
+
+@layer components {
+  /* ── Buttons ──────────────────────────────────────── */
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-2.5 
+           bg-valo-red hover:bg-valo-red-dark active:scale-95
+           text-white font-display font-semibold text-sm tracking-wider uppercase
+           rounded transition-all duration-150 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-2.5
+           bg-transparent border border-valo-border hover:border-valo-red
+           text-gray-300 hover:text-white font-display font-semibold text-sm tracking-wider uppercase
+           rounded transition-all duration-150 active:scale-95;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2
+           bg-transparent hover:bg-valo-dark-3 text-gray-400 hover:text-white
+           text-sm font-medium rounded transition-all duration-150;
+  }
+
+  /* ── Cards ────────────────────────────────────────── */
+  .card {
+    @apply bg-valo-card border border-valo-border rounded-lg overflow-hidden;
+  }
+
+  .card-hover {
+    @apply card hover:border-valo-red/50 transition-all duration-200 hover:shadow-lg hover:shadow-valo-red/5;
+  }
+
+  /* ── Inputs ───────────────────────────────────────── */
+  .input {
+    @apply w-full px-4 py-2.5 bg-valo-dark-2 border border-valo-border rounded
+           text-white placeholder-gray-500 font-body text-sm
+           focus:outline-none focus:border-valo-red focus:ring-1 focus:ring-valo-red/30
+           transition-colors duration-150;
+  }
+
+  .input-label {
+    @apply block text-xs font-display font-semibold tracking-wider uppercase text-gray-400 mb-1.5;
+  }
+
+  /* ── Badges ───────────────────────────────────────── */
+  .badge {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-medium;
+  }
+
+  .badge-rank {
+    @apply badge bg-valo-dark-3 text-gray-300 border border-valo-border;
+  }
+
+  /* ── Rank colors ──────────────────────────────────── */
+  .rank-iron      { @apply text-gray-400; }
+  .rank-bronze    { color: #CD7F32; }
+  .rank-silver    { @apply text-gray-300; }
+  .rank-gold      { color: #FFD700; }
+  .rank-platinum  { color: #00D4AA; }
+  .rank-diamond   { color: #00B4FF; }
+  .rank-ascendant { color: #A855F7; }
+  .rank-immortal  { color: #FF4655; }
+  .rank-radiant   { background: linear-gradient(135deg, #FFD700, #FFA500); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+
+  /* ── Section divider ──────────────────────────────── */
+  .valo-divider {
+    @apply relative flex items-center gap-3 my-6;
+  }
+  .valo-divider::before, .valo-divider::after {
+    content: '';
+    @apply flex-1 h-px bg-valo-border;
+  }
+
+  /* ── Status dot ───────────────────────────────────── */
+  .status-online  { @apply w-2 h-2 rounded-full bg-green-400 shadow-[0_0_6px_#4ade80]; }
+  .status-offline { @apply w-2 h-2 rounded-full bg-gray-600; }
+
+  /* ── Noise overlay for cards ──────────────────────── */
+  .noise::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    border-radius: inherit;
+  }
+}
+
+/* ── Page transition ───────────────────────────────── */
+.page-enter { animation: slideUp 0.35s ease-out; }
