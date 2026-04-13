@@ -201,7 +201,15 @@ export default function DashboardPage() {
                   {getRankEmoji(conn.rank)} {conn.rank}
                 </div>
                 <button
-                  onClick={(e) => { e.stopPropagation(); navigate('/chat'); }}
+                  onClick={async (e) => {
+                    e.stopPropagation();
+                    try {
+                      const { data } = await api.post(`/chat/start/${conn._id}`);
+                      navigate(`/chat/${data.conversation._id}`);
+                    } catch {
+                      toast.error('Could not open conversation');
+                    }
+                  }}
                   className="mt-3 w-full text-xs btn-secondary py-1.5"
                 >
                   💬 Message
