@@ -75,8 +75,12 @@ const useAuthStore = create(
           api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
           const { data } = await api.get('/auth/me');
           set({ user: data.user, isAuthenticated: true });
-        } catch {
-          get().logout();
+        } catch (err) {
+          // Only log out for explicit auth failures (token expired / invalid).
+          // Network errors, cold-start 503s, etc. keep the user logged in.
+          if (err?.response?.status === 401) {
+            get().logout();
+          }
         }
       },
 
@@ -85,7 +89,7 @@ const useAuthStore = create(
       },
     }),
     {
-      name: 'ranksync-auth',
+      name: 'playpair-auth',
       partialize: (state) => ({ token: state.token, user: state.user, isAuthenticated: state.isAuthenticated }),
       onRehydrateStorage: () => (state) => {
         // Re-attach token to axios on hydration
