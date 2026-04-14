@@ -61,18 +61,36 @@ export default function EditProfilePage() {
     });
   };
 
+  // Crop to square, resize to 600×600, export as high-quality JPEG
+  const processAvatar = (file) =>
+    new Promise((resolve, reject) => {
+      const img = new Image();
+      const objectUrl = URL.createObjectURL(file);
+      img.onload = () => {
+        const SIZE = 600;
+        const canvas = document.createElement('canvas');
+        canvas.width = SIZE;
+        canvas.height = SIZE;
+        const ctx = canvas.getContext('2d');
+        // Center-crop the shortest dimension to a square
+        const side = Math.min(img.width, img.height);
+        const sx = (img.width - side) / 2;
+        const sy = (img.height - side) / 2;
+        ctx.drawImage(img, sx, sy, side, side, 0, 0, SIZE, SIZE);
+        URL.revokeObjectURL(objectUrl);
+        resolve(canvas.toDataURL('image/jpeg', 0.92));
+      };
+      img.onerror = reject;
+      img.src = objectUrl;
+    });
+
   const handleAvatarUpload = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
-    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
+    if (file.size > 10 * 1024 * 1024) { toast.error('Image must be under 10MB'); return; }
     setUploadingAvatar(true);
     try {
-      const base64 = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(reader.result);
-        reader.onerror = reject;
-        reader.readAsDataURL(file);
-      });
+      const base64 = await processAvatar(file);
       setAvatarPreview(base64);
       const { data } = await api.post('/users/avatar', { avatar: base64 });
       updateUser({ avatar: data.avatar });
