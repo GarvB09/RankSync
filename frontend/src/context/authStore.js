@@ -14,6 +14,8 @@ const useAuthStore = create(
       token: null,
       isLoading: false,
       isAuthenticated: false,
+      _hasHydrated: false,
+      setHasHydrated: (v) => set({ _hasHydrated: v }),
 
       // ── Actions ───────────────────────────────────────────────────────────
 
@@ -92,10 +94,11 @@ const useAuthStore = create(
       name: 'playpair-auth',
       partialize: (state) => ({ token: state.token, user: state.user, isAuthenticated: state.isAuthenticated }),
       onRehydrateStorage: () => (state) => {
-        // Re-attach token to axios on hydration
         if (state?.token) {
           api.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
         }
+        // Signal that localStorage has been read — PrivateRoute waits for this
+        state?.setHasHydrated(true);
       },
     }
   )

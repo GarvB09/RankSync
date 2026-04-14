@@ -22,7 +22,7 @@ api.interceptors.response.use(
   (res) => res,
   (error) => {
     if (error.response?.status === 401) {
-      localStorage.removeItem('ranksync-auth');
+      localStorage.removeItem('playpair-auth');
       delete api.defaults.headers.common['Authorization'];
       if (!window.location.pathname.includes('/login')) {
         window.location.href = '/login';
