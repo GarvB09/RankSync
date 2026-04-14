@@ -273,49 +273,48 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
         )}
       </AnimatePresence>
 
-      {/* Photo */}
-      <div className="relative h-60 bg-pp-input-bg overflow-hidden flex-shrink-0">
+      {/* Card header — circular avatar */}
+      <div className="relative bg-gradient-to-b from-pp-orange-light to-white pt-5 pb-3 flex flex-col items-center flex-shrink-0">
         {player.isOnline && (
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent z-10" />
-        )}
-        {player.avatar ? (
-          <img src={player.avatar} alt="" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center">
-            <span className="text-[6rem] text-gray-200 leading-none select-none font-hero">
-              {player.username[0].toUpperCase()}
-            </span>
-          </div>
-        )}
-        <div className="absolute bottom-0 left-0 right-0 h-24 bg-gradient-to-t from-white via-white/50 to-transparent" />
-
-        {player.isOnline && (
-          <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-white/90 rounded-full px-2.5 py-1 z-10 shadow-sm">
-            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-            <span className="text-xs text-green-600 font-semibold">Online</span>
-          </div>
+          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent" />
         )}
 
-        <div className="absolute bottom-3 left-4 z-10">
+        {/* Avatar circle */}
+        <div className="relative">
+          {player.avatar ? (
+            <img
+              src={player.avatar}
+              alt=""
+              className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-md group-hover:scale-105 transition-transform duration-500"
+            />
+          ) : (
+            <div className="w-28 h-28 rounded-full border-4 border-white shadow-md bg-pp-input-bg flex items-center justify-center">
+              <span className="text-5xl text-gray-300 leading-none select-none font-hero">
+                {player.username[0].toUpperCase()}
+              </span>
+            </div>
+          )}
+          {player.isOnline && (
+            <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-sm" />
+          )}
+        </div>
+
+        {/* Rank + meta badges */}
+        <div className="mt-2 flex items-center gap-2 flex-wrap justify-center px-3">
           <span className={`font-mono font-bold text-sm ${getRankColorClass(player.rank)}`}>
             {getRankEmoji(player.rank)} {player.rank}
           </span>
+          {player.gender && (
+            <span className="text-xs text-gray-500 bg-white/80 rounded-full px-2 py-0.5 border border-pp-border">
+              {player.gender === 'Male' ? '♂' : player.gender === 'Female' ? '♀' : '⚧'} {player.gender}
+            </span>
+          )}
+          {player.age && (
+            <span className="text-xs text-gray-500 bg-white/80 rounded-full px-2 py-0.5 border border-pp-border">
+              {player.age}
+            </span>
+          )}
         </div>
-
-        {(player.age || player.gender) && (
-          <div className="absolute bottom-3 right-4 z-10 flex gap-1.5">
-            {player.gender && (
-              <span className="text-xs text-gray-700 bg-white/90 rounded-full px-2 py-0.5 shadow-sm">
-                {player.gender === 'Male' ? '♂' : player.gender === 'Female' ? '♀' : '⚧'} {player.gender}
-              </span>
-            )}
-            {player.age && (
-              <span className="text-xs text-gray-700 bg-white/90 rounded-full px-2 py-0.5 shadow-sm">
-                {player.age}
-              </span>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Info */}
@@ -640,7 +639,9 @@ export default function FindDuoPage() {
             <div className="grid sm:grid-cols-2 gap-5">
               {Array.from({ length: 6 }).map((_, i) => (
                 <div key={i} className="bg-white border border-pp-border rounded-2xl overflow-hidden animate-pulse">
-                  <div className="h-60 bg-pp-input-bg" />
+                  <div className="h-40 bg-pp-orange-light/40 flex items-center justify-center">
+                    <div className="w-28 h-28 rounded-full bg-pp-input-bg border-4 border-white" />
+                  </div>
                   <div className="p-4 space-y-3">
                     <div className="h-4 bg-pp-input-bg rounded w-1/2" />
                     <div className="h-3 bg-pp-input-bg rounded w-3/4" />
