@@ -320,9 +320,20 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
       {/* Info */}
       <div className="p-4 flex flex-col gap-3 flex-1">
         <div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-display font-bold text-gray-900 text-lg leading-tight">{player.username}</h3>
             {!player.isOnline && <span className="text-xs text-gray-400">{formatLastSeen(player.lastSeen)}</span>}
+            {player.trackerUrl && (
+              <a
+                href={player.trackerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                onClick={(e) => e.stopPropagation()}
+                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pp-orange-light border border-orange-200 text-pp-orange text-[10px] font-semibold hover:bg-orange-100 transition-colors"
+              >
+                🔗 Verify
+              </a>
+            )}
           </div>
           {player.riotId?.gameName && (
             <div className="text-xs text-gray-400 font-mono mt-0.5">

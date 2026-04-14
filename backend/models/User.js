@@ -164,6 +164,14 @@ const userSchema = new mongoose.Schema(
       maxlength: 30,
     }],
 
+    // Tracker profile URL (tracker.gg, blitz.gg, etc.)
+    trackerUrl: {
+      type: String,
+      default: null,
+      trim: true,
+      maxlength: [300, 'Tracker URL too long'],
+    },
+
     // Social / Status
     isOnline: { type: Boolean, default: false },
     lastSeen: { type: Date, default: Date.now },

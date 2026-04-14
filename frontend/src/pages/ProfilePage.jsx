@@ -129,6 +129,16 @@ export default function ProfilePage() {
               <span className="text-sm text-gray-500">{profile.region}{profile.city ? `, ${profile.city}` : ''}</span>
               {vcLabel && <><span className="text-gray-300">·</span><span className="text-sm text-gray-500">{vcLabel}</span></>}
             </div>
+            {profile.trackerUrl && (
+              <a
+                href={profile.trackerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 mt-2 px-3 py-1 rounded-full bg-pp-orange-light border border-orange-200 text-pp-orange text-xs font-semibold hover:bg-orange-100 transition-colors"
+              >
+                🔗 Verify Rank
+              </a>
+            )}
           </div>
 
           <div className="flex flex-col gap-2 flex-shrink-0">

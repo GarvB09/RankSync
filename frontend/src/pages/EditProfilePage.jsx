@@ -24,6 +24,7 @@ export default function EditProfilePage() {
     bio: '', age: '', gender: '', region: '', city: '',
     roles: [], playstyleTags: [], voiceChatPreference: 'preferred',
     preferredRankMin: 'Silver 1', preferredRankMax: 'Gold 3', favoriteAgents: [],
+    trackerUrl: '',
   });
 
   const [newUsername, setNewUsername] = useState('');
@@ -48,6 +49,7 @@ export default function EditProfilePage() {
         preferredRankMin: user.preferredRankMin || 'Silver 1',
         preferredRankMax: user.preferredRankMax || 'Gold 3',
         favoriteAgents: user.favoriteAgents || [],
+        trackerUrl: user.trackerUrl || '',
       });
       if (user.riotId?.gameName) setRiotInput(`${user.riotId.gameName}#${user.riotId.tagLine || ''}`);
     }
@@ -441,6 +443,34 @@ export default function EditProfilePage() {
                 </button>
               );
             })}
+          </div>
+        </section>
+
+        {/* Tracker Profile */}
+        <section className="card p-6 space-y-4">
+          <SectionHeader icon="🔗" title="Rank Tracker" />
+          <p className="text-xs text-gray-400">
+            Paste your tracker.gg, blitz.gg, or similar profile URL so other players can verify your rank.
+          </p>
+          <div className="space-y-2">
+            <label className="input-label">Tracker URL</label>
+            <input
+              type="url"
+              className="input"
+              placeholder="https://tracker.gg/valorant/profile/riot/YourName%23TAG/overview"
+              value={form.trackerUrl}
+              onChange={(e) => setForm((p) => ({ ...p, trackerUrl: e.target.value }))}
+            />
+            {form.trackerUrl && (
+              <a
+                href={form.trackerUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 text-xs text-pp-orange hover:underline mt-1"
+              >
+                🔗 Preview link →
+              </a>
+            )}
           </div>
         </section>
 

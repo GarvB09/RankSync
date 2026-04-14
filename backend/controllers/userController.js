@@ -30,7 +30,7 @@ exports.updateProfile = async (req, res, next) => {
     const allowedFields = [
       'bio', 'age', 'gender', 'region', 'city', 'roles', 'playstyleTags', 'voiceChatPreference',
       'preferredRankMin', 'preferredRankMax', 'availability',
-      'favoriteAgents', 'avatar',
+      'favoriteAgents', 'avatar', 'trackerUrl',
     ];
 
     const updates = {};
@@ -115,7 +115,7 @@ exports.findDuo = async (req, res, next) => {
 
     const [users, total] = await Promise.all([
       User.find(filter)
-        .select('username avatar age gender rank region roles playstyleTags voiceChatPreference bio isOnline lastSeen duoRating favoriteAgents riotId riotVerified')
+        .select('username avatar age gender rank region roles playstyleTags voiceChatPreference bio isOnline lastSeen duoRating favoriteAgents riotId riotVerified trackerUrl')
         .sort({ isOnline: -1, duoRating: -1 })
         .skip(skip)
         .limit(parseInt(limit))
