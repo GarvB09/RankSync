@@ -209,7 +209,9 @@ userSchema.virtual('winRate').get(function () {
 });
 
 // ─── Indexes ──────────────────────────────────────────────────────────────────
-userSchema.index({ rank: 1, region: 1 });
+// Compound index for the main find-duo query (most used)
+userSchema.index({ isProfileComplete: 1, rank: 1, region: 1, gender: 1 });
+userSchema.index({ isProfileComplete: 1, isOnline: -1, duoRating: -1 });
 userSchema.index({ isOnline: 1 });
 userSchema.index({ username: 'text' });
 

@@ -10,6 +10,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const helmet = require('helmet');
 const morgan = require('morgan');
+const compression = require('compression');
 const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 const passport = require('passport');
@@ -47,26 +48,40 @@ app.set('io', io);
 // ─── Database Connection ─────────────────────────────────────────────────────
 connectDB();
 
-// ─── Global Rate Limiter ─────────────────────────────────────────────────────
+// ─── Rate Limiters ───────────────────────────────────────────────────────────
+// General API: generous for 1000 users browsing normally
 const limiter = rateLimit({
-  windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
-  message: 'Too many requests from this IP, please try again later.',
+  windowMs: 15 * 60 * 1000,
+  max: 500,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many requests. Please slow down.' },
+});
+
+// Auth endpoints: stricter to block brute-force
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many login attempts. Try again in 15 minutes.' },
 });
 
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(helmet({ crossOriginEmbedderPolicy: false }));
+app.use(compression());
 app.use(cors({
   origin: process.env.CLIENT_URL || 'http://localhost:3000',
   credentials: true,
 }));
-app.use(morgan('dev'));
+app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(passport.initialize());
-app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+app.use('/uploads', express.static(path.join(__dirname, 'uploads'), { maxAge: '7d' }));
 app.use('/api/', limiter);
+app.use('/api/auth/', authLimiter);
 
 // ─── Routes ───────────────────────────────────────────────────────────────────
 app.use('/api/auth', authRoutes);

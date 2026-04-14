@@ -7,7 +7,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useAuthStore from '../context/authStore';
 import api, { API_URL } from '../utils/api';
-import { getRankColorClass, getRankEmoji, getRoleIcon, formatLastSeen } from '../utils/rankUtils';
+import { getRankColorClass, getRankEmoji, getRoleIcon, formatLastSeen, getAgentIcon } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
@@ -203,11 +203,18 @@ export default function ProfilePage() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6">
           <h2 className="font-display font-bold text-base text-gray-900 mb-3">FAVORITE AGENTS</h2>
           <div className="flex flex-wrap gap-2">
-            {profile.favoriteAgents.map((agent) => (
-              <span key={agent} className="px-3 py-1.5 bg-pp-input-bg border border-pp-border rounded-full text-sm text-gray-600">
-                🦸 {agent}
-              </span>
-            ))}
+            {profile.favoriteAgents.map((agent) => {
+              const icon = getAgentIcon(agent);
+              return (
+                <span key={agent} className="flex items-center gap-1.5 px-3 py-1.5 bg-pp-input-bg border border-pp-border rounded-full text-sm text-gray-600">
+                  {icon
+                    ? <img src={icon} alt={agent} className="w-5 h-5 rounded-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                    : <span>🦸</span>
+                  }
+                  {agent}
+                </span>
+              );
+            })}
           </div>
         </motion.div>
       )}

@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../context/authStore';
 import api, { API_URL } from '../utils/api';
-import { RANKS, REGIONS, ROLES, PLAYSTYLES, AGENTS, getRankColorClass, getRankEmoji } from '../utils/rankUtils';
+import { RANKS, REGIONS, ROLES, PLAYSTYLES, AGENTS, getRankColorClass, getRankEmoji, getAgentIcon } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
 const VOICE_OPTIONS = [
@@ -403,18 +403,26 @@ export default function EditProfilePage() {
             <span className="text-xs text-gray-400 font-body font-normal tracking-normal normal-case">(pick up to 5)</span>
           </h2>
           <div className="flex flex-wrap gap-2">
-            {AGENTS.map((agent) => (
-              <button key={agent} type="button"
-                disabled={!form.favoriteAgents.includes(agent) && form.favoriteAgents.length >= 5}
-                onClick={() => toggleArray('favoriteAgents', agent, setForm)}
-                className={`px-3 py-1.5 rounded-full border text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
-                  form.favoriteAgents.includes(agent)
-                    ? 'bg-amber-50 border-amber-300 text-amber-600'
-                    : 'border-pp-border text-gray-500 hover:border-pp-orange hover:text-pp-orange'
-                }`}>
-                {agent}
-              </button>
-            ))}
+            {AGENTS.map((agent) => {
+              const icon = getAgentIcon(agent);
+              const selected = form.favoriteAgents.includes(agent);
+              return (
+                <button key={agent} type="button"
+                  disabled={!selected && form.favoriteAgents.length >= 5}
+                  onClick={() => toggleArray('favoriteAgents', agent, setForm)}
+                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                    selected
+                      ? 'bg-amber-50 border-amber-300 text-amber-700'
+                      : 'border-pp-border text-gray-500 hover:border-pp-orange hover:text-pp-orange'
+                  }`}>
+                  {icon
+                    ? <img src={icon} alt="" className="w-4 h-4 rounded-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                    : null
+                  }
+                  {agent}
+                </button>
+              );
+            })}
           </div>
         </section>
 
