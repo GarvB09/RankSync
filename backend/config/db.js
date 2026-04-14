@@ -9,7 +9,9 @@ const connectDB = async () => {
     const conn = await mongoose.connect(
       process.env.MONGODB_URI || 'mongodb://localhost:27017/find-your-duo',
       {
-        // Modern mongoose doesn't need these options but good for clarity
+        maxPoolSize: 10,              // Up to 10 concurrent DB connections
+        serverSelectionTimeoutMS: 5000,
+        socketTimeoutMS: 45000,
       }
     );
     console.log(`✅ MongoDB connected: ${conn.connection.host}`);

@@ -146,7 +146,7 @@ export default function DashboardPage() {
       {/* Connections */}
       <section>
         <h2 className="font-display font-bold text-lg text-gray-900 tracking-wide mb-4 flex items-center gap-2">
-          🎮 Your Duo Squad
+          🎮 Your Squad
         </h2>
         {connections.connections.length === 0 ? (
           <div className="card p-12 text-center">

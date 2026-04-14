@@ -118,19 +118,25 @@ exports.findDuo = async (req, res, next) => {
         .select('username avatar age gender rank region roles playstyleTags voiceChatPreference bio isOnline lastSeen duoRating favoriteAgents riotId riotVerified')
         .sort({ isOnline: -1, duoRating: -1 })
         .skip(skip)
-        .limit(parseInt(limit)),
+        .limit(parseInt(limit))
+        .lean(),
       User.countDocuments(filter),
     ]);
 
     // Annotate connection status for current user
-    const currentUser = await User.findById(req.user.id).select('sentRequests receivedRequests connections');
+    const currentUser = await User.findById(req.user.id)
+      .select('sentRequests receivedRequests connections')
+      .lean();
+    const connSet = new Set(currentUser.connections.map(String));
+    const sentSet = new Set(currentUser.sentRequests.map(String));
+    const recvSet = new Set(currentUser.receivedRequests.map(String));
     const enriched = users.map((u) => ({
-      ...u.toObject(),
-      connectionStatus: currentUser.connections.includes(u._id)
+      ...u,
+      connectionStatus: connSet.has(String(u._id))
         ? 'connected'
-        : currentUser.sentRequests.includes(u._id)
+        : sentSet.has(String(u._id))
         ? 'pending_sent'
-        : currentUser.receivedRequests.includes(u._id)
+        : recvSet.has(String(u._id))
         ? 'pending_received'
         : 'none',
     }));

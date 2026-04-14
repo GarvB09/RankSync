@@ -30,6 +30,9 @@ const errorHandler = require('./middleware/errorHandler');
 const app = express();
 const server = http.createServer(app);
 
+// Trust the first proxy (required for Render — fixes IP-based rate limiting)
+app.set('trust proxy', 1);
+
 // ─── Socket.io Setup ────────────────────────────────────────────────────────
 const io = new Server(server, {
   cors: {
@@ -37,6 +40,9 @@ const io = new Server(server, {
     methods: ['GET', 'POST'],
     credentials: true,
   },
+  pingTimeout: 60000,
+  pingInterval: 25000,
+  transports: ['websocket', 'polling'],
 });
 
 // Initialize socket handlers
@@ -67,6 +73,15 @@ const authLimiter = rateLimit({
   message: { success: false, message: 'Too many login attempts. Try again in 15 minutes.' },
 });
 
+// ─── Request Timeout ─────────────────────────────────────────────────────────
+// Kill requests that hang for more than 30s to free up the connection pool
+app.use((_req, res, next) => {
+  res.setTimeout(30000, () => {
+    res.status(503).json({ success: false, message: 'Request timed out.' });
+  });
+  next();
+});
+
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(helmet({ crossOriginEmbedderPolicy: false }));
 app.use(compression());
@@ -93,10 +108,15 @@ app.use('/api/notifications', notificationRoutes);
 
 // Root + Health check
 app.get('/', (_req, res) => {
-  res.json({ status: 'ok', app: 'RankSync API', version: '1.0.0' });
+  res.json({ status: 'ok', app: 'PlayPair API', version: '1.0.0' });
 });
-app.get('/api/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
+app.get('/api/health', (_req, res) => {
+  const dbState = ['disconnected', 'connected', 'connecting', 'disconnecting'];
+  res.json({
+    status: 'ok',
+    db: dbState[mongoose.connection.readyState] || 'unknown',
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // ─── Error Handler ────────────────────────────────────────────────────────────
@@ -105,9 +125,24 @@ app.use(errorHandler);
 // ─── Start Server ─────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 server.listen(PORT, () => {
-  console.log(`\n🚀 Find Your Duo server running on port ${PORT}`);
+  console.log(`\n🚀 PlayPair server running on port ${PORT}`);
   console.log(`📡 Socket.io ready for real-time events`);
   console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}\n`);
 });
+
+// ─── Graceful Shutdown (Render SIGTERM) ───────────────────────────────────────
+const shutdown = () => {
+  console.log('\n🛑 SIGTERM received — shutting down gracefully');
+  server.close(() => {
+    mongoose.connection.close(false, () => {
+      console.log('✅ MongoDB connection closed. Exiting.');
+      process.exit(0);
+    });
+  });
+  // Force exit after 10s if graceful close stalls
+  setTimeout(() => process.exit(1), 10000);
+};
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 module.exports = { app, server, io };
