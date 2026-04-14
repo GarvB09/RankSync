@@ -1,5 +1,5 @@
 /**
- * FindDuoPage — Hinge-style browse with animations, pass tracking, daily connect limit, weekly superlike
+ * FindDuoPage — Hinge-style browse with animations, pass tracking, daily connect limit, weekly fistbump
  */
 
 import { useState, useEffect, useCallback } from 'react';
@@ -58,21 +58,148 @@ function getWeekStart() {
   return monday.toDateString();
 }
 
-function getSuperlikeStatus() {
+function getFistbumpStatus() {
   try {
-    const stored = JSON.parse(localStorage.getItem('playpair-superlike') || '{}');
+    const stored = JSON.parse(localStorage.getItem('playpair-fistbump') || '{}');
     const thisWeek = getWeekStart();
     if (stored.week !== thisWeek) return { used: false, week: thisWeek };
     return stored;
   } catch { return { used: false, week: getWeekStart() }; }
 }
 
-function useSuperlikeLocal() {
-  localStorage.setItem('playpair-superlike', JSON.stringify({ used: true, week: getWeekStart() }));
+function useFistbumpLocal() {
+  localStorage.setItem('playpair-fistbump', JSON.stringify({ used: true, week: getWeekStart() }));
+}
+
+// ─── Fistbump Overlay ─────────────────────────────────────────────────────────
+const FIST_PARTICLES = Array.from({ length: 12 }, (_, i) => {
+  const angle = (i / 12) * 360;
+  const dist = 130 + (i % 3) * 45;
+  const rad = (angle * Math.PI) / 180;
+  return {
+    x: Math.cos(rad) * dist,
+    y: Math.sin(rad) * dist,
+    emoji: i % 2 === 0 ? '🤜' : '🤛',
+    delay: 0.46 + (i % 4) * 0.02,
+    rotate: (i % 2 === 0 ? 1 : -1) * 360,
+    size: [44, 32, 48][i % 3],
+  };
+});
+
+const SPARKLES = ['💥', '⚡', '✨', '🔥', '💥', '✨'];
+
+function FistbumpOverlay({ onDone }) {
+  useEffect(() => {
+    const t = setTimeout(onDone, 2500);
+    return () => clearTimeout(t);
+  }, [onDone]);
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-[999] flex items-center justify-center overflow-hidden pointer-events-none"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.08 }}
+    >
+      {/* Orange bg flash */}
+      <motion.div
+        className="absolute inset-0"
+        animate={{
+          backgroundColor: [
+            'rgba(255,107,0,0)',
+            'rgba(255,107,0,0.88)',
+            'rgba(255,107,0,0.55)',
+            'rgba(255,107,0,0)',
+          ],
+        }}
+        transition={{ duration: 2.5, times: [0, 0.16, 0.5, 1] }}
+      />
+
+      {/* Shaking container */}
+      <motion.div
+        className="relative flex items-center justify-center"
+        style={{ width: 420, height: 420 }}
+        animate={{ x: [0, -13, 16, -11, 8, -5, 3, 0], y: [0, -7, 9, -5, 4, -2, 1, 0] }}
+        transition={{ duration: 0.45, delay: 0.46 }}
+      >
+        {/* Left fist */}
+        <motion.span
+          className="absolute select-none"
+          style={{ fontSize: 88, left: '50%', top: '50%', marginLeft: -52, marginTop: -52, lineHeight: 1 }}
+          initial={{ x: -560, scale: 0.9, opacity: 0 }}
+          animate={{ x: [-560, -52, -52], scale: [0.9, 1.6, 1.3], opacity: [0, 1, 1] }}
+          transition={{ duration: 0.56, times: [0, 0.78, 1], ease: [0.2, 1, 0.3, 1] }}
+        >🤜</motion.span>
+
+        {/* Right fist */}
+        <motion.span
+          className="absolute select-none"
+          style={{ fontSize: 88, left: '50%', top: '50%', marginLeft: -52, marginTop: -52, lineHeight: 1 }}
+          initial={{ x: 560, scale: 0.9, opacity: 0 }}
+          animate={{ x: [560, 52, 52], scale: [0.9, 1.6, 1.3], opacity: [0, 1, 1] }}
+          transition={{ duration: 0.56, times: [0, 0.78, 1], ease: [0.2, 1, 0.3, 1] }}
+        >🤛</motion.span>
+
+        {/* Impact white burst */}
+        <motion.div
+          className="absolute rounded-full bg-white"
+          style={{ left: '50%', top: '50%', marginLeft: -4, marginTop: -4 }}
+          initial={{ width: 8, height: 8, opacity: 0, x: '-50%', y: '-50%' }}
+          animate={{ width: [8, 320, 640], height: [8, 320, 640], opacity: [0, 0.95, 0], x: '-50%', y: '-50%' }}
+          transition={{ duration: 0.48, delay: 0.44, ease: 'easeOut' }}
+        />
+
+        {/* Emoji particles */}
+        {FIST_PARTICLES.map((p, i) => (
+          <motion.span
+            key={i}
+            className="absolute select-none"
+            style={{ fontSize: p.size, left: '50%', top: '50%', marginLeft: -(p.size / 2), marginTop: -(p.size / 2), lineHeight: 1 }}
+            initial={{ x: 0, y: 0, scale: 0, opacity: 0, rotate: 0 }}
+            animate={{ x: p.x, y: p.y, scale: [0, 2, 0.6, 0], opacity: [0, 1, 1, 0], rotate: p.rotate }}
+            transition={{ duration: 1.1, delay: p.delay, ease: 'easeOut' }}
+          >{p.emoji}</motion.span>
+        ))}
+
+        {/* FISTBUMP! text */}
+        <div className="absolute" style={{ left: '50%', top: '63%' }}>
+          <motion.div
+            className="font-hero text-white tracking-widest select-none whitespace-nowrap text-center"
+            style={{
+              fontSize: 'clamp(1.8rem, 6vw, 3.5rem)',
+              textShadow: '0 3px 20px rgba(0,0,0,0.5), 0 0 50px rgba(255,200,0,0.6)',
+              transform: 'translateX(-50%)',
+            }}
+            initial={{ y: 50, scale: 0, opacity: 0 }}
+            animate={{ y: [50, -14, 0], scale: [0, 1.45, 1], opacity: [0, 1, 1, 0] }}
+            transition={{ duration: 1.9, delay: 0.5, times: [0, 0.22, 0.48, 1] }}
+          >
+            FISTBUMP! 🤜🤛
+          </motion.div>
+        </div>
+
+        {/* Sparkle emojis scattered around */}
+        {SPARKLES.map((s, i) => (
+          <motion.span
+            key={`sp-${i}`}
+            className="absolute text-3xl select-none"
+            style={{
+              left: `${8 + i * 15}%`,
+              top: `${8 + (i % 3) * 28}%`,
+            }}
+            initial={{ scale: 0, opacity: 0, rotate: 0 }}
+            animate={{ scale: [0, 2.2, 0], opacity: [0, 1, 0], rotate: 180 }}
+            transition={{ duration: 0.75, delay: 0.5 + i * 0.07 }}
+          >{s}</motion.span>
+        ))}
+      </motion.div>
+    </motion.div>
+  );
 }
 
 // ─── Player Card ──────────────────────────────────────────────────────────────
-function PlayerCard({ player, onRequest, onSuperlike, index, likesLeft, superlikeUsed, onLikeUsed, onSuperlikeUsed, onPassed }) {
+function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpUsed, onLikeUsed, onFistbumpUsed, onPassed, onFistbumpAnim }) {
   const [status, setStatus] = useState(player.connectionStatus || 'none');
   const [sending, setSending] = useState(false);
   const [anim, setAnim] = useState(null);
@@ -90,16 +217,20 @@ function PlayerCard({ player, onRequest, onSuperlike, index, likesLeft, superlik
     }, 700);
   };
 
-  const handleSuperlike = async () => {
-    if (superlikeUsed) { toast.error('Superlike already used this week! Resets Monday ⭐'); return; }
-    setAnim('superlike');
+  const handleFistbump = async () => {
+    if (fistbumpUsed) { toast.error('Fistbump already used this week! Resets Monday 🤜'); return; }
+    setAnim('fistbump');
     setSending(true);
     setTimeout(async () => {
-      const result = await onSuperlike(player._id);
-      if (result.success) { setStatus('pending_sent'); onSuperlikeUsed(); }
+      const result = await onFistbump(player._id);
+      if (result.success) {
+        setStatus('pending_sent');
+        onFistbumpUsed();
+        onFistbumpAnim(); // trigger full-screen animation
+      }
       setSending(false);
       setTimeout(() => setAnim(null), 300);
-    }, 700);
+    }, 400);
   };
 
   const handlePass = () => {
@@ -117,7 +248,7 @@ function PlayerCard({ player, onRequest, onSuperlike, index, likesLeft, superlik
       transition={{ delay: index * 0.05, duration: 0.3 }}
       className="bg-white border border-pp-border rounded-2xl overflow-hidden flex flex-col group hover:shadow-md transition-shadow relative"
     >
-      {/* Anim overlay */}
+      {/* Card anim overlay */}
       <AnimatePresence>
         {anim && (
           <motion.div
@@ -126,7 +257,7 @@ function PlayerCard({ player, onRequest, onSuperlike, index, likesLeft, superlik
             className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl"
             style={{
               background: anim === 'like' ? 'rgba(255,107,0,0.15)'
-                : anim === 'superlike' ? 'rgba(245,158,11,0.18)'
+                : anim === 'fistbump' ? 'rgba(255,107,0,0.2)'
                 : 'rgba(0,0,0,0.12)',
             }}
           >
@@ -135,7 +266,7 @@ function PlayerCard({ player, onRequest, onSuperlike, index, likesLeft, superlik
               transition={{ type: 'spring', stiffness: 300, damping: 18 }}
             >
               {anim === 'like' ? <span className="text-8xl">🎮</span>
-                : anim === 'superlike' ? <span className="text-8xl">⭐</span>
+                : anim === 'fistbump' ? <span className="text-8xl">🤜</span>
                 : <span className="text-8xl">✕</span>}
             </motion.div>
           </motion.div>
@@ -230,16 +361,16 @@ function PlayerCard({ player, onRequest, onSuperlike, index, likesLeft, superlik
               ✕
             </button>
             <button
-              onClick={handleSuperlike}
-              disabled={sending || superlikeUsed}
-              title={superlikeUsed ? 'Used this week' : '1 Superlike per week'}
-              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full border transition-colors text-base ${
-                superlikeUsed
+              onClick={handleFistbump}
+              disabled={sending || fistbumpUsed}
+              title={fistbumpUsed ? 'Used this week — resets Monday' : '1 Fistbump per week 🤜'}
+              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full border text-lg transition-all ${
+                fistbumpUsed
                   ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                  : 'border-amber-300 text-amber-500 hover:bg-amber-50 hover:border-amber-400'
+                  : 'border-orange-300 text-orange-500 hover:bg-orange-50 hover:border-orange-400 hover:scale-110'
               }`}
             >
-              ⭐
+              🤜
             </button>
             <button
               onClick={handleConnect}
@@ -393,10 +524,11 @@ export default function FindDuoPage() {
   const [showFilters, setShowFilters] = useState(false);
   const [passedIds, setPassedIds] = useState(() => getPassedProfiles());
   const [likesUsed, setLikesUsed] = useState(() => getTodayLikes());
-  const [superlikeStatus, setSuperlikeStatus] = useState(() => getSuperlikeStatus());
+  const [fistbumpStatus, setFistbumpStatus] = useState(() => getFistbumpStatus());
+  const [showFistbump, setShowFistbump] = useState(false);
 
   const likesLeft = DAILY_LIKE_LIMIT - likesUsed;
-  const superlikeUsed = superlikeStatus.used;
+  const fistbumpUsed = fistbumpStatus.used;
 
   const fetchPlayers = useCallback(async (page = 1) => {
     setLoading(true);
@@ -412,10 +544,10 @@ export default function FindDuoPage() {
 
   useEffect(() => { fetchPlayers(1); }, [filters]);
 
-  const handleRequest = async (userId, isSuperlike = false) => {
+  const handleRequest = async (userId, isFistbump = false) => {
     try {
-      await api.post(`/users/request/${userId}`, { superlike: isSuperlike });
-      toast.success(isSuperlike ? '⭐ Superlike sent!' : '🎮 Connect request sent!');
+      await api.post(`/users/request/${userId}`, { fistbump: isFistbump });
+      toast.success(isFistbump ? '🤜 Fistbump sent!' : '🎮 Connect request sent!');
       return { success: true };
     } catch (err) {
       toast.error(err.response?.data?.message || 'Failed to send request');
@@ -423,7 +555,7 @@ export default function FindDuoPage() {
     }
   };
 
-  const handleSuperlike = (userId) => handleRequest(userId, true);
+  const handleFistbump = (userId) => handleRequest(userId, true);
 
   const handleLikeUsed = () => {
     const newCount = incrementLike();
@@ -433,10 +565,9 @@ export default function FindDuoPage() {
     else if (remaining <= 2) toast(`${remaining} connect${remaining === 1 ? '' : 's'} left today`, { icon: '🎮' });
   };
 
-  const handleSuperlikeUsed = () => {
-    useSuperlikeLocal();
-    setSuperlikeStatus({ used: true, week: getWeekStart() });
-    toast('Superlike used! Resets next Monday ⭐', { icon: '⭐' });
+  const handleFistbumpUsed = () => {
+    useFistbumpLocal();
+    setFistbumpStatus({ used: true, week: getWeekStart() });
   };
 
   const handlePassed = (userId) => setPassedIds((prev) => ({ ...prev, [userId]: Date.now() }));
@@ -450,6 +581,11 @@ export default function FindDuoPage() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto animate-fade-in">
+      {/* Full-screen fistbump animation */}
+      <AnimatePresence>
+        {showFistbump && <FistbumpOverlay onDone={() => setShowFistbump(false)} />}
+      </AnimatePresence>
+
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
         <div>
@@ -466,9 +602,9 @@ export default function FindDuoPage() {
             🎮 {likesLeft}/{DAILY_LIKE_LIMIT} today
           </div>
           <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-semibold ${
-            !superlikeUsed ? 'border-amber-200 text-amber-600 bg-amber-50' : 'border-pp-border text-gray-400'
+            !fistbumpUsed ? 'border-orange-200 text-orange-500 bg-orange-50' : 'border-pp-border text-gray-400'
           }`}>
-            ⭐ {superlikeUsed ? 'Used' : '1 left'} this week
+            🤜 {fistbumpUsed ? 'Used' : '1 left'} this week
           </div>
           <button
             onClick={() => setShowFilters(!showFilters)}
@@ -528,13 +664,14 @@ export default function FindDuoPage() {
                       key={player._id}
                       player={player}
                       onRequest={handleRequest}
-                      onSuperlike={handleSuperlike}
+                      onFistbump={handleFistbump}
                       index={i}
                       likesLeft={likesLeft}
-                      superlikeUsed={superlikeUsed}
+                      fistbumpUsed={fistbumpUsed}
                       onLikeUsed={handleLikeUsed}
-                      onSuperlikeUsed={handleSuperlikeUsed}
+                      onFistbumpUsed={handleFistbumpUsed}
                       onPassed={handlePassed}
+                      onFistbumpAnim={() => setShowFistbump(true)}
                     />
                   ))}
                 </div>

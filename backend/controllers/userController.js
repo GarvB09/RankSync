@@ -183,18 +183,18 @@ exports.sendDuoRequest = async (req, res, next) => {
       User.findByIdAndUpdate(targetId, { $addToSet: { receivedRequests: senderId } }),
     ]);
 
-    const isSuperlike = req.body.superlike === true;
+    const isFistbump = req.body.fistbump === true;
 
     // Create notification
     const notification = await Notification.create({
       recipient: targetId,
       sender: senderId,
       type: 'duo_request',
-      title: isSuperlike ? '⭐ Super Duo Request!' : 'New Duo Request!',
-      message: isSuperlike
-        ? `${sender.username} superliked you and really wants to duo!`
+      title: isFistbump ? '🤜 Fistbump Request!' : 'New Duo Request!',
+      message: isFistbump
+        ? `${sender.username} fistbumped you — they REALLY want to duo!`
         : `${sender.username} wants to duo with you!`,
-      data: { senderId: senderId, senderUsername: sender.username, superlike: isSuperlike },
+      data: { senderId: senderId, senderUsername: sender.username, fistbump: isFistbump },
     });
 
     // Emit real-time notification via socket
@@ -312,7 +312,7 @@ exports.changeUsername = async (req, res, next) => {
 
     const updatedUser = await User.findByIdAndUpdate(
       req.user.id,
-      { $set: { username: trimmed } },
+      { $set: { username: trimmed, needsUsername: false } },
       { new: true, runValidators: true }
     ).select('-password -googleId');
 

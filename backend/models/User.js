@@ -168,6 +168,7 @@ const userSchema = new mongoose.Schema(
     isOnline: { type: Boolean, default: false },
     lastSeen: { type: Date, default: Date.now },
     isProfileComplete: { type: Boolean, default: false },
+    needsUsername: { type: Boolean, default: false }, // true for new Google users until they choose a username
 
     // Connections
     sentRequests: [{

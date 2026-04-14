@@ -35,20 +35,19 @@ passport.use(
             user.authProvider = 'google';
             await user.save();
           } else {
-            // Create new user from Google profile
-            const baseUsername = profile.displayName.replace(/\s+/g, '_').toLowerCase().slice(0, 15);
-            let username = baseUsername;
-            let counter = 1;
-            while (await User.findOne({ username })) {
-              username = `${baseUsername}${counter++}`;
-            }
+            // Create new user with a temp username — they'll choose their own after login
+            let tempUsername;
+            do {
+              tempUsername = `player_${Math.random().toString(36).slice(2, 8)}`;
+            } while (await User.findOne({ username: tempUsername }));
 
             user = await User.create({
-              username,
+              username: tempUsername,
               email: profile.emails[0].value,
               googleId: profile.id,
               authProvider: 'google',
               avatar: profile.photos[0]?.value || null,
+              needsUsername: true,
             });
           }
         }
