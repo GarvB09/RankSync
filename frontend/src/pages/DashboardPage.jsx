@@ -7,7 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useAuthStore from '../context/authStore';
 import api from '../utils/api';
-import { getRankColorClass, getRankEmoji, getRoleIcon, formatLastSeen } from '../utils/rankUtils';
+import { getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, formatLastSeen } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
 const STAT_ACCENTS = [
@@ -71,7 +71,10 @@ export default function DashboardPage() {
             Welcome back, <span className="text-pp-orange">{user?.username}</span>
           </h1>
           <p className="text-gray-500 text-sm mt-1">
-            {getRankEmoji(user?.rank)} {user?.rank || 'Unranked'} · {user?.region || 'No region set'}
+            {getRankIcon(user?.rank)
+              ? <img src={getRankIcon(user?.rank)} alt="" className="inline w-4 h-4 object-contain mr-1 -mt-0.5" />
+              : getRankEmoji(user?.rank) + ' '
+            }{user?.rank || 'Unranked'} · {user?.region || 'No region set'}
           </p>
         </div>
         <Link to="/find-duo" className="btn-primary">
@@ -130,7 +133,10 @@ export default function DashboardPage() {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-gray-900 text-sm truncate">{requester.username}</div>
-                  <div className={`text-xs ${getRankColorClass(requester.rank)}`}>{requester.rank}</div>
+                  <div className={`text-xs flex items-center gap-1 ${getRankColorClass(requester.rank)}`}>
+                    {getRankIcon(requester.rank) && <img src={getRankIcon(requester.rank)} alt="" className="w-4 h-4 object-contain" />}
+                    {requester.rank}
+                  </div>
                   <div className="flex gap-1.5 mt-2">
                     {requester.roles?.slice(0, 2).map((r) => (
                       <span key={r} className="text-xs bg-pp-input-bg text-gray-500 px-1.5 py-0.5 rounded-full border border-pp-border">
@@ -192,8 +198,12 @@ export default function DashboardPage() {
                     </div>
                   </div>
                 </div>
-                <div className={`text-sm font-mono font-medium ${getRankColorClass(conn.rank)}`}>
-                  {getRankEmoji(conn.rank)} {conn.rank}
+                <div className={`text-sm font-mono font-medium flex items-center gap-1.5 ${getRankColorClass(conn.rank)}`}>
+                  {getRankIcon(conn.rank)
+                    ? <img src={getRankIcon(conn.rank)} alt="" className="w-5 h-5 object-contain" />
+                    : <span>{getRankEmoji(conn.rank)}</span>
+                  }
+                  {conn.rank}
                 </div>
                 <button
                   onClick={async (e) => {

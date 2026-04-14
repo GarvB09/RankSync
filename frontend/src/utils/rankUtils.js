@@ -86,6 +86,17 @@ export const getAgentIcon = (name) => {
 };
 
 /**
+ * Returns the official Valorant rank icon URL from the valorant-api.com CDN.
+ * Tiers 3–27 map 1-to-1 with the RANKS array (Iron 1 → Radiant).
+ * Usage: <img src={getRankIcon('Diamond 2')} className="w-6 h-6" />
+ */
+const RANK_TIER_CDN = 'https://media.valorant-api.com/competitivetiers/03621f52-342b-cf4e-4f86-9350a49c6d04';
+export const getRankIcon = (rank) => {
+  const index = RANKS.indexOf(rank);
+  return index !== -1 ? `${RANK_TIER_CDN}/${index + 3}/largeicon.png` : null;
+};
+
+/**
  * Get the tier name from a full rank string (e.g. "Diamond 2" → "Diamond")
  */
 export const getRankTier = (rank) => rank?.split(' ')[0] || '';

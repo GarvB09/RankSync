@@ -7,7 +7,7 @@ import { Outlet, NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import useAuthStore from '../../context/authStore';
 import { useSocket } from '../../hooks/useSocket';
-import { getRankColorClass, getRankEmoji } from '../../utils/rankUtils';
+import { getRankColorClass, getRankEmoji, getRankIcon } from '../../utils/rankUtils';
 import api, { API_URL } from '../../utils/api';
 import toast from 'react-hot-toast';
 
@@ -92,8 +92,12 @@ export default function AppLayout() {
             </div>
             <div className="min-w-0">
               <div className="text-sm font-semibold text-gray-900 truncate">{user.username}</div>
-              <div className={`text-xs font-mono ${getRankColorClass(user.rank)}`}>
-                {getRankEmoji(user.rank)} {user.rank || 'Unranked'}
+              <div className={`text-xs font-mono flex items-center gap-1 ${getRankColorClass(user.rank)}`}>
+                {getRankIcon(user.rank)
+                  ? <img src={getRankIcon(user.rank)} alt="" className="w-4 h-4 object-contain" />
+                  : <span>{getRankEmoji(user.rank)}</span>
+                }
+                {user.rank || 'Unranked'}
               </div>
             </div>
           </div>

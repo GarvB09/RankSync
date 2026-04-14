@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import {
   RANKS, REGIONS, ROLES, PLAYSTYLES,
-  getRankColorClass, getRankEmoji, getRoleIcon, formatLastSeen,
+  getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, formatLastSeen,
 } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
@@ -301,8 +301,12 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
 
         {/* Rank + meta badges */}
         <div className="mt-2 flex items-center gap-2 flex-wrap justify-center px-3">
-          <span className={`font-mono font-bold text-sm ${getRankColorClass(player.rank)}`}>
-            {getRankEmoji(player.rank)} {player.rank}
+          <span className={`font-mono font-bold text-sm flex items-center gap-1.5 ${getRankColorClass(player.rank)}`}>
+            {getRankIcon(player.rank)
+              ? <img src={getRankIcon(player.rank)} alt={player.rank} className="w-6 h-6 object-contain" />
+              : <span>{getRankEmoji(player.rank)}</span>
+            }
+            {player.rank}
           </span>
           {player.gender && (
             <span className="text-xs text-gray-500 bg-white/80 rounded-full px-2 py-0.5 border border-pp-border">

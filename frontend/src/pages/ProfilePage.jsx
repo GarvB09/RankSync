@@ -7,7 +7,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useAuthStore from '../context/authStore';
 import api, { API_URL } from '../utils/api';
-import { getRankColorClass, getRankEmoji, getRoleIcon, formatLastSeen, getAgentIcon } from '../utils/rankUtils';
+import { getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, formatLastSeen, getAgentIcon } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
@@ -122,8 +122,12 @@ export default function ProfilePage() {
               </div>
             )}
             <div className="flex items-center gap-3 mt-2 flex-wrap">
-              <span className={`text-lg font-mono font-bold ${getRankColorClass(profile.rank)}`}>
-                {getRankEmoji(profile.rank)} {profile.rank || 'Unranked'}
+              <span className={`font-mono font-bold flex items-center gap-2 ${getRankColorClass(profile.rank)}`}>
+                {getRankIcon(profile.rank)
+                  ? <img src={getRankIcon(profile.rank)} alt={profile.rank} className="w-8 h-8 object-contain" />
+                  : <span className="text-lg">{getRankEmoji(profile.rank)}</span>
+                }
+                <span className="text-lg">{profile.rank || 'Unranked'}</span>
               </span>
               <span className="text-gray-300">·</span>
               <span className="text-sm text-gray-500">{profile.region}{profile.city ? `, ${profile.city}` : ''}</span>
