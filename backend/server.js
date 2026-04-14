@@ -33,10 +33,25 @@ const server = http.createServer(app);
 // Trust the first proxy (required for Render — fixes IP-based rate limiting)
 app.set('trust proxy', 1);
 
+// ─── Allowed Origins ─────────────────────────────────────────────────────────
+const ALLOWED_ORIGINS = [
+  process.env.CLIENT_URL,
+  'https://www.playpair.in',
+  'https://playpair.in',
+  'https://rank-sync.vercel.app',
+  'http://localhost:3000',
+].filter(Boolean);
+
+const corsOrigin = (origin, cb) => {
+  // Allow requests with no origin (mobile apps, curl, Render health checks)
+  if (!origin || ALLOWED_ORIGINS.includes(origin)) return cb(null, true);
+  cb(new Error(`CORS: ${origin} not allowed`));
+};
+
 // ─── Socket.io Setup ────────────────────────────────────────────────────────
 const io = new Server(server, {
   cors: {
-    origin: process.env.CLIENT_URL || 'http://localhost:3000',
+    origin: corsOrigin,
     methods: ['GET', 'POST'],
     credentials: true,
   },
@@ -85,10 +100,7 @@ app.use((_req, res, next) => {
 // ─── Middleware ───────────────────────────────────────────────────────────────
 app.use(helmet({ crossOriginEmbedderPolicy: false }));
 app.use(compression());
-app.use(cors({
-  origin: process.env.CLIENT_URL || 'http://localhost:3000',
-  credentials: true,
-}));
+app.use(cors({ origin: corsOrigin, credentials: true }));
 app.use(morgan('combined'));
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true }));
