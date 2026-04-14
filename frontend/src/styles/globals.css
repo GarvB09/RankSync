@@ -7,7 +7,14 @@
   html { scroll-behavior: smooth; }
 
   body {
-    @apply bg-pp-bg text-gray-900 font-body antialiased;
+    @apply text-gray-900 font-body antialiased;
+    background-color: #FAFAFA;
+    background-image:
+      radial-gradient(ellipse at 12% 20%, rgba(255, 107, 0, 0.12) 0%, transparent 48%),
+      radial-gradient(ellipse at 88% 80%, rgba(255, 107, 0, 0.09) 0%, transparent 48%),
+      radial-gradient(ellipse at 80% 10%, rgba(124, 58, 237, 0.05) 0%, transparent 40%),
+      radial-gradient(ellipse at 20% 90%, rgba(99, 102, 241, 0.05) 0%, transparent 40%);
+    background-attachment: fixed;
   }
 
   ::-webkit-scrollbar { width: 5px; height: 5px; }
@@ -44,11 +51,16 @@
 
   /* ── Cards ───────────────────────────────────────────── */
   .card {
-    @apply bg-pp-surface border border-pp-border rounded-2xl overflow-hidden shadow-sm;
+    @apply bg-white/75 backdrop-blur-md border border-white/80 rounded-2xl overflow-hidden;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.06), 0 1px 4px rgba(0,0,0,0.04), inset 0 1px 0 rgba(255,255,255,0.9);
   }
 
   .card-hover {
-    @apply card hover:shadow-md hover:border-gray-300 transition-all duration-200;
+    @apply card hover:border-gray-200 transition-all duration-200;
+    transition-property: box-shadow, border-color, transform;
+  }
+  .card-hover:hover {
+    box-shadow: 0 8px 32px rgba(0,0,0,0.10), 0 2px 8px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.9);
   }
 
   /* ── Inputs ──────────────────────────────────────────── */

@@ -10,16 +10,26 @@ import api from '../utils/api';
 import { getRankColorClass, getRankEmoji, getRoleIcon, formatLastSeen } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
-const StatCard = ({ label, value, sub, delay = 0 }) => (
+const STAT_ACCENTS = [
+  'from-orange-400/20 to-orange-300/5 border-orange-200/60',
+  'from-blue-400/15 to-blue-300/5 border-blue-200/60',
+  'from-purple-400/15 to-purple-300/5 border-purple-200/60',
+  'from-emerald-400/15 to-emerald-300/5 border-emerald-200/60',
+];
+
+const StatCard = ({ label, value, sub, delay = 0, accent = 0 }) => (
   <motion.div
     initial={{ opacity: 0, y: 16 }}
     animate={{ opacity: 1, y: 0 }}
     transition={{ delay }}
-    className="card p-5"
+    className={`relative overflow-hidden rounded-2xl p-5 backdrop-blur-md border bg-gradient-to-br ${STAT_ACCENTS[accent]}`}
+    style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.06), inset 0 1px 0 rgba(255,255,255,0.8)' }}
   >
     <div className="text-3xl font-display font-bold text-gray-900">{value}</div>
     <div className="text-sm font-semibold text-gray-600 mt-1">{label}</div>
     {sub && <div className="text-xs text-gray-400 mt-0.5">{sub}</div>}
+    {/* Decorative orb */}
+    <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full bg-white/20 blur-xl pointer-events-none" />
   </motion.div>
 );
 
@@ -88,10 +98,10 @@ export default function DashboardPage() {
 
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <StatCard label="Connections" value={connections.connections.length} sub="Active duos" delay={0.05} />
-        <StatCard label="Pending" value={connections.receivedRequests.length} sub="Awaiting your reply" delay={0.1} />
-        <StatCard label="Rank" value={user?.rank?.split(' ')[0] || '—'} sub={user?.rank || 'Link Riot account'} delay={0.15} />
-        <StatCard label="Region" value={user?.region || '—'} sub={user?.region ? 'Your server' : 'Set in profile'} delay={0.2} />
+        <StatCard label="Connections" value={connections.connections.length} sub="Active duos" delay={0.05} accent={0} />
+        <StatCard label="Pending" value={connections.receivedRequests.length} sub="Awaiting your reply" delay={0.1} accent={1} />
+        <StatCard label="Rank" value={user?.rank?.split(' ')[0] || '—'} sub={user?.rank || 'Link Riot account'} delay={0.15} accent={2} />
+        <StatCard label="Region" value={user?.region || '—'} sub={user?.region ? 'Your server' : 'Set in profile'} delay={0.2} accent={3} />
       </div>
 
       {/* Incoming requests */}
