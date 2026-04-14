@@ -25,35 +25,24 @@ import AppLayout from './components/layout/AppLayout';
 
 // ─── Route Guards ─────────────────────────────────────────────────────────────
 const PrivateRoute = ({ children }) => {
-  const { isAuthenticated, user, _hasHydrated } = useAuthStore();
-  // Wait for Zustand to read from localStorage before deciding.
-  // Without this, the first render always sees isAuthenticated=false and
-  // redirects to /login before the stored token is loaded.
-  if (!_hasHydrated) {
-    return (
-      <div className="flex items-center justify-center h-screen bg-white">
-        <div className="w-8 h-8 border-4 border-pp-orange border-t-transparent rounded-full animate-spin" />
-      </div>
-    );
-  }
+  const { isAuthenticated, user } = useAuthStore();
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (user?.needsUsername) return <Navigate to="/setup-username" replace />;
   return children;
 };
 
 const PublicRoute = ({ children }) => {
-  const { isAuthenticated, _hasHydrated } = useAuthStore();
-  if (!_hasHydrated) return null;
+  const { isAuthenticated } = useAuthStore();
   return isAuthenticated ? <Navigate to="/dashboard" replace /> : children;
 };
 
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
-  const { refreshUser, isAuthenticated, _hasHydrated } = useAuthStore();
+  const { refreshUser, isAuthenticated } = useAuthStore();
 
   useEffect(() => {
     if (isAuthenticated) refreshUser();
-  }, [_hasHydrated]);
+  }, []);
 
   return (
     <Routes>

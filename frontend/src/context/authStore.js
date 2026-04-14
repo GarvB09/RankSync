@@ -1,107 +1,128 @@
 /**
  * Auth Store — Zustand
- * Global authentication state
+ * Manual localStorage sync (no persist middleware) for synchronous hydration.
+ * Zustand's persist middleware rehydrates AFTER the first render, causing
+ * PrivateRoute to always redirect to /login on fresh page loads.
  */
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
 import api from '../utils/api';
 
-const useAuthStore = create(
-  persist(
-    (set, get) => ({
-      user: null,
-      token: null,
-      isLoading: false,
-      isAuthenticated: false,
-      _hasHydrated: false,
-      setHasHydrated: (v) => set({ _hasHydrated: v }),
+// ── localStorage helpers ──────────────────────────────────────────────────────
+const STORAGE_KEY = 'playpair-auth';
 
-      // ── Actions ───────────────────────────────────────────────────────────
+const loadFromStorage = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    return raw ? JSON.parse(raw) : {};
+  } catch {
+    return {};
+  }
+};
 
-      setUser: (user) => set({ user, isAuthenticated: !!user }),
+const saveToStorage = (token, user, isAuthenticated) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ token, user, isAuthenticated }));
+  } catch {}
+};
 
-      setToken: (token) => {
-        set({ token });
-        if (token) {
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-        } else {
-          delete api.defaults.headers.common['Authorization'];
-        }
-      },
+const clearStorage = () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch {}
+};
 
-      login: async (credentials) => {
-        set({ isLoading: true });
-        try {
-          const { data } = await api.post('/auth/login', credentials);
-          get().setToken(data.token);
-          set({ user: data.user, isAuthenticated: true, isLoading: false });
-          return { success: true };
-        } catch (error) {
-          set({ isLoading: false });
-          return {
-            success: false,
-            message: error.response?.data?.message || 'Login failed',
-          };
-        }
-      },
+// ── Bootstrap synchronously from localStorage ─────────────────────────────────
+const stored = loadFromStorage();
+if (stored.token) {
+  api.defaults.headers.common['Authorization'] = `Bearer ${stored.token}`;
+}
 
-      register: async (userData) => {
-        set({ isLoading: true });
-        try {
-          const { data } = await api.post('/auth/register', userData);
-          get().setToken(data.token);
-          set({ user: data.user, isAuthenticated: true, isLoading: false });
-          return { success: true };
-        } catch (error) {
-          set({ isLoading: false });
-          return {
-            success: false,
-            message: error.response?.data?.message || 'Registration failed',
-          };
-        }
-      },
+// ── Store ─────────────────────────────────────────────────────────────────────
+const useAuthStore = create((set, get) => ({
+  token: stored.token || null,
+  user: stored.user || null,
+  isAuthenticated: !!(stored.token && stored.isAuthenticated),
+  isLoading: false,
 
-      logout: async () => {
-        try {
-          await api.post('/auth/logout');
-        } catch (_) {}
-        get().setToken(null);
-        set({ user: null, isAuthenticated: false });
-      },
+  setUser: (user) => set({ user, isAuthenticated: !!user }),
 
-      refreshUser: async () => {
-        const token = get().token;
-        if (!token) return;
-        try {
-          api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
-          const { data } = await api.get('/auth/me');
-          set({ user: data.user, isAuthenticated: true });
-        } catch (err) {
-          // Only log out for explicit auth failures (token expired / invalid).
-          // Network errors, cold-start 503s, etc. keep the user logged in.
-          if (err?.response?.status === 401) {
-            get().logout();
-          }
-        }
-      },
-
-      updateUser: (updates) => {
-        set((state) => ({ user: { ...state.user, ...updates } }));
-      },
-    }),
-    {
-      name: 'playpair-auth',
-      partialize: (state) => ({ token: state.token, user: state.user, isAuthenticated: state.isAuthenticated }),
-      onRehydrateStorage: () => (state) => {
-        if (state?.token) {
-          api.defaults.headers.common['Authorization'] = `Bearer ${state.token}`;
-        }
-        // Signal that localStorage has been read — PrivateRoute waits for this
-        state?.setHasHydrated(true);
-      },
+  setToken: (token) => {
+    set({ token });
+    if (token) {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+    } else {
+      delete api.defaults.headers.common['Authorization'];
     }
-  )
-);
+  },
+
+  login: async (credentials) => {
+    set({ isLoading: true });
+    try {
+      const { data } = await api.post('/auth/login', credentials);
+      get().setToken(data.token);
+      set({ user: data.user, isAuthenticated: true, isLoading: false });
+      saveToStorage(data.token, data.user, true);
+      return { success: true };
+    } catch (error) {
+      set({ isLoading: false });
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Login failed',
+      };
+    }
+  },
+
+  register: async (userData) => {
+    set({ isLoading: true });
+    try {
+      const { data } = await api.post('/auth/register', userData);
+      get().setToken(data.token);
+      set({ user: data.user, isAuthenticated: true, isLoading: false });
+      saveToStorage(data.token, data.user, true);
+      return { success: true };
+    } catch (error) {
+      set({ isLoading: false });
+      return {
+        success: false,
+        message: error.response?.data?.message || 'Registration failed',
+      };
+    }
+  },
+
+  logout: async () => {
+    try {
+      await api.post('/auth/logout');
+    } catch (_) {}
+    get().setToken(null);
+    clearStorage();
+    set({ user: null, isAuthenticated: false });
+  },
+
+  refreshUser: async () => {
+    const token = get().token;
+    if (!token) return;
+    try {
+      api.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+      const { data } = await api.get('/auth/me');
+      set({ user: data.user, isAuthenticated: true });
+      saveToStorage(token, data.user, true);
+    } catch (err) {
+      // Only log out on explicit 401 (token expired/invalid).
+      // Network errors and cold-start failures keep the session intact.
+      if (err?.response?.status === 401) {
+        get().logout();
+      }
+    }
+  },
+
+  updateUser: (updates) => {
+    set((state) => {
+      const newUser = { ...state.user, ...updates };
+      saveToStorage(state.token, newUser, state.isAuthenticated);
+      return { user: newUser };
+    });
+  },
+}));
 
 export default useAuthStore;
