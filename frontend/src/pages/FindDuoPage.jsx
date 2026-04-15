@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import {
-  RANKS, REGIONS, REGION_FLAGS, getRegionFlag,
+  RANKS, REGIONS, REGION_FLAGS, ROLES, PLAYSTYLES, getRegionFlag,
   getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, formatLastSeen,
 } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
