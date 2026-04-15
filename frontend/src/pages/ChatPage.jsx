@@ -4,45 +4,112 @@
 
 import { useState, useEffect, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import useAuthStore from '../context/authStore';
 import { useSocket } from '../hooks/useSocket';
-import api from '../utils/api';
+import api, { API_URL } from '../utils/api';
 import { formatLastSeen } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
-function MessageBubble({ message, isOwn }) {
+// ─── Helpers ──────────────────────────────────────────────────────────────────
+function formatTime(date) {
+  return new Date(date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+}
+
+function formatConvTime(date) {
+  if (!date) return '';
+  const diff = Date.now() - new Date(date).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return 'now';
+  if (mins < 60) return `${mins}m`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h`;
+  return `${Math.floor(hrs / 24)}d`;
+}
+
+function avatarSrc(avatar) {
+  if (!avatar) return null;
+  return avatar.startsWith('/uploads') ? `${API_URL}${avatar}` : avatar;
+}
+
+// ─── Avatar ───────────────────────────────────────────────────────────────────
+function Avatar({ user, size = 10, showOnline = false }) {
+  const src = avatarSrc(user?.avatar);
+  return (
+    <div className="relative flex-shrink-0">
+      <div className={`w-${size} h-${size} rounded-full bg-gradient-to-br from-pp-orange/20 to-pp-orange/5 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden`}>
+        {src
+          ? <img src={src} alt="" className="w-full h-full object-cover" />
+          : <span className="font-bold text-pp-orange" style={{ fontSize: size * 3.5 + 'px' }}>
+              {user?.username?.[0]?.toUpperCase()}
+            </span>
+        }
+      </div>
+      {showOnline && (
+        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${user?.isOnline ? 'bg-green-400' : 'bg-gray-300'}`} />
+      )}
+    </div>
+  );
+}
+
+// ─── Message Bubble ───────────────────────────────────────────────────────────
+function MessageBubble({ message, isOwn, showAvatar }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 8, scale: 0.97 }}
+      initial={{ opacity: 0, y: 6, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ duration: 0.18 }}
       className={`flex items-end gap-2 ${isOwn ? 'flex-row-reverse' : 'flex-row'}`}
     >
-      {!isOwn && (
-        <div className="w-7 h-7 rounded-full bg-pp-input-bg border border-pp-border flex-shrink-0 flex items-center justify-center text-xs overflow-hidden">
-          {message.sender?.avatar
-            ? <img src={message.sender.avatar} alt="" className="w-full h-full object-cover" />
-            : <span className="text-gray-600 font-bold">{message.sender?.username?.[0]?.toUpperCase()}</span>
-          }
-        </div>
-      )}
-      <div className={`max-w-xs lg:max-w-md ${isOwn ? 'items-end' : 'items-start'} flex flex-col gap-1`}>
-        {!isOwn && <span className="text-xs text-gray-400 px-1">{message.sender?.username}</span>}
-        <div className={`px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+      {/* Avatar spacer / avatar */}
+      <div className="w-7 flex-shrink-0">
+        {!isOwn && showAvatar && (
+          <Avatar user={message.sender} size={7} />
+        )}
+      </div>
+
+      <div className={`flex flex-col gap-1 max-w-xs lg:max-w-md ${isOwn ? 'items-end' : 'items-start'}`}>
+        <div className={`px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
           isOwn
-            ? 'bg-pp-orange text-white rounded-br-sm'
-            : 'bg-pp-input-bg text-gray-800 border border-pp-border rounded-bl-sm'
+            ? 'bg-gradient-to-br from-pp-orange to-orange-600 text-white rounded-2xl rounded-br-md'
+            : 'bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-bl-md shadow-sm'
         }`}>
           {message.content}
         </div>
-        <span className="text-xs text-gray-400 px-1">
-          {new Date(message.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+        <span className="text-[10px] text-gray-400 px-1">
+          {formatTime(message.createdAt)}
+          {isOwn && message.optimistic && <span className="ml-1 opacity-60">·</span>}
         </span>
       </div>
     </motion.div>
   );
 }
 
+// ─── Typing Dots ──────────────────────────────────────────────────────────────
+function TypingIndicator({ partner }) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: 4 }}
+      className="flex items-end gap-2"
+    >
+      <Avatar user={partner} size={7} />
+      <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm flex items-center gap-1">
+        {[0, 1, 2].map((i) => (
+          <motion.div
+            key={i}
+            className="w-1.5 h-1.5 rounded-full bg-gray-400"
+            animate={{ y: [0, -4, 0] }}
+            transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
+          />
+        ))}
+      </div>
+    </motion.div>
+  );
+}
+
+// ─── Conversation Item ────────────────────────────────────────────────────────
 function ConversationItem({ conv, isActive, onClick, currentUserId }) {
   const other = conv.participants?.find((p) => p._id !== currentUserId);
   const lastMsg = conv.lastMessage;
@@ -50,38 +117,80 @@ function ConversationItem({ conv, isActive, onClick, currentUserId }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 p-3 rounded-xl transition-all text-left ${
+      className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all text-left group ${
         isActive
-          ? 'bg-pp-orange-light border border-orange-200'
-          : 'hover:bg-pp-input-bg border border-transparent'
+          ? 'bg-gradient-to-r from-pp-orange/15 to-orange-50 border border-orange-200/60'
+          : 'hover:bg-gray-50 border border-transparent'
       }`}
     >
-      <div className="relative flex-shrink-0">
-        <div className="w-10 h-10 rounded-full bg-pp-input-bg border border-pp-border flex items-center justify-center text-base overflow-hidden">
-          {other?.avatar
-            ? <img src={other.avatar} alt="" className="w-full h-full object-cover" />
-            : <span className="text-gray-600 font-bold text-sm">{other?.username?.[0]?.toUpperCase()}</span>
-          }
-        </div>
-        <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${other?.isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
-      </div>
+      <Avatar user={other} size={11} showOnline />
       <div className="flex-1 min-w-0">
-        <div className="flex items-center justify-between">
-          <span className="font-semibold text-sm text-gray-900 truncate">{other?.username}</span>
+        <div className="flex items-center justify-between gap-1">
+          <span className={`font-semibold text-sm truncate ${isActive ? 'text-pp-orange' : 'text-gray-900'}`}>
+            {other?.username}
+          </span>
+          <span className="text-[10px] text-gray-400 flex-shrink-0">
+            {formatConvTime(lastMsg?.createdAt)}
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-1 mt-0.5">
+          <span className="text-xs text-gray-400 truncate">
+            {lastMsg?.content || 'Say hello! 👋'}
+          </span>
           {conv.unreadCount > 0 && (
-            <span className="bg-pp-orange text-white text-xs rounded-full w-4 h-4 flex items-center justify-center flex-shrink-0 ml-1">
+            <span className="bg-pp-orange text-white text-[10px] font-bold rounded-full min-w-[18px] h-[18px] flex items-center justify-center px-1 flex-shrink-0">
               {conv.unreadCount}
             </span>
           )}
-        </div>
-        <div className="text-xs text-gray-400 truncate mt-0.5">
-          {lastMsg?.content || 'Start chatting!'}
         </div>
       </div>
     </button>
   );
 }
 
+// ─── Date Divider ─────────────────────────────────────────────────────────────
+function DateDivider({ date }) {
+  const d = new Date(date);
+  const today = new Date();
+  const yesterday = new Date(today);
+  yesterday.setDate(today.getDate() - 1);
+
+  let label;
+  if (d.toDateString() === today.toDateString()) label = 'Today';
+  else if (d.toDateString() === yesterday.toDateString()) label = 'Yesterday';
+  else label = d.toLocaleDateString([], { weekday: 'long', month: 'short', day: 'numeric' });
+
+  return (
+    <div className="flex items-center gap-3 py-2">
+      <div className="flex-1 h-px bg-gray-100" />
+      <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider px-2">{label}</span>
+      <div className="flex-1 h-px bg-gray-100" />
+    </div>
+  );
+}
+
+// ─── Group messages by day and add avatar grouping ────────────────────────────
+function groupMessages(messages) {
+  const result = [];
+  let lastDate = null;
+  let lastSenderId = null;
+
+  messages.forEach((msg, i) => {
+    const msgDate = new Date(msg.createdAt).toDateString();
+    if (msgDate !== lastDate) {
+      result.push({ type: 'divider', date: msg.createdAt, id: `div-${i}` });
+      lastDate = msgDate;
+      lastSenderId = null;
+    }
+    const showAvatar = msg.sender?._id !== lastSenderId;
+    result.push({ type: 'message', message: msg, showAvatar, id: msg._id });
+    lastSenderId = msg.sender?._id || msg.sender;
+  });
+
+  return result;
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
 export default function ChatPage() {
   const { conversationId: paramConvId } = useParams();
   const { user } = useAuthStore();
@@ -101,6 +210,7 @@ export default function ChatPage() {
   const messagesEndRef = useRef(null);
   const typingTimeoutRef = useRef(null);
   const inputRef = useRef(null);
+  const textareaRef = useRef(null);
 
   const activeConv = conversations.find((c) => c._id === activeConvId);
   const partner = activeConv?.participants?.find((p) => p._id !== user?._id);
@@ -159,6 +269,9 @@ export default function ChatPage() {
 
   const handleInputChange = (e) => {
     setInput(e.target.value);
+    // Auto-resize
+    const ta = textareaRef.current;
+    if (ta) { ta.style.height = 'auto'; ta.style.height = Math.min(ta.scrollHeight, 112) + 'px'; }
     if (!typing) { setTyping(true); emit('typing_start', { conversationId: activeConvId }); }
     clearTimeout(typingTimeoutRef.current);
     typingTimeoutRef.current = setTimeout(() => {
@@ -171,6 +284,7 @@ export default function ChatPage() {
     const content = input.trim();
     if (!content || !activeConvId || sending) return;
     setInput('');
+    if (textareaRef.current) { textareaRef.current.style.height = 'auto'; }
     emit('typing_stop', { conversationId: activeConvId });
     const tempMsg = {
       _id: `temp_${Date.now()}`,
@@ -200,31 +314,39 @@ export default function ChatPage() {
     setPartnerTyping(false);
   };
 
+  const grouped = groupMessages(messages);
+
   return (
-    <div className="flex h-full overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
-      {/* Conversation list */}
+    <div className="flex overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
+
+      {/* ── Conversation sidebar ───────────────────────────────── */}
       <aside className={`
-        flex-shrink-0 border-r border-pp-border flex flex-col bg-white
+        flex-shrink-0 flex flex-col
+        border-r border-gray-100 bg-white/90 backdrop-blur-md
         ${activeConvId ? 'hidden sm:flex w-72' : 'flex w-full sm:w-72'}
       `}>
-        <div className="p-4 border-b border-pp-border">
-          <h2 className="font-display font-bold text-gray-900 tracking-wide">MESSAGES</h2>
+        {/* Sidebar header */}
+        <div className="px-5 py-4 border-b border-gray-100">
+          <h2 className="font-hero text-lg text-gray-900 tracking-wide">Messages</h2>
+          <p className="text-xs text-gray-400 mt-0.5">{conversations.length} conversation{conversations.length !== 1 ? 's' : ''}</p>
         </div>
-        <div className="flex-1 overflow-y-auto p-2 space-y-1">
+
+        {/* List */}
+        <div className="flex-1 overflow-y-auto px-2 py-2 space-y-0.5">
           {loadingConvs ? (
-            Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="flex items-center gap-3 p-3 animate-pulse">
-                <div className="w-10 h-10 rounded-full bg-pp-input-bg" />
+            Array.from({ length: 4 }).map((_, i) => (
+              <div key={i} className="flex items-center gap-3 px-3 py-3 animate-pulse">
+                <div className="w-11 h-11 rounded-full bg-gray-100 flex-shrink-0" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-pp-input-bg rounded w-2/3" />
-                  <div className="h-3 bg-pp-input-bg rounded w-1/2" />
+                  <div className="h-3 bg-gray-100 rounded-full w-2/3" />
+                  <div className="h-3 bg-gray-100 rounded-full w-1/2" />
                 </div>
               </div>
             ))
           ) : conversations.length === 0 ? (
-            <div className="text-center py-10 px-4">
-              <div className="text-3xl mb-3">💬</div>
-              <p className="text-gray-500 text-sm">No conversations yet.</p>
+            <div className="text-center py-16 px-6">
+              <div className="w-16 h-16 rounded-2xl bg-pp-orange-light flex items-center justify-center text-3xl mx-auto mb-4">💬</div>
+              <p className="font-semibold text-gray-700 text-sm">No conversations yet</p>
               <p className="text-gray-400 text-xs mt-1">Connect with players to start chatting!</p>
             </div>
           ) : (
@@ -241,95 +363,145 @@ export default function ChatPage() {
         </div>
       </aside>
 
-      {/* Chat window */}
+      {/* ── Chat window ───────────────────────────────────────── */}
       {activeConvId ? (
-        <div className="flex-1 flex flex-col min-w-0 bg-pp-bg">
-          {/* Header */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-pp-border bg-white flex-shrink-0 shadow-sm">
-            <button onClick={() => { setActiveConvId(null); navigate('/chat'); }} className="sm:hidden text-gray-400 hover:text-gray-900 mr-1">←</button>
+        <div className="flex-1 flex flex-col min-w-0" style={{ background: 'linear-gradient(160deg, #fdf6f0 0%, #f8f9fb 60%, #f0f4ff 100%)' }}>
+
+          {/* Chat header */}
+          <div className="flex items-center gap-3 px-4 py-3 border-b border-white/60 bg-white/80 backdrop-blur-md flex-shrink-0"
+               style={{ boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
+            <button
+              onClick={() => { setActiveConvId(null); navigate('/chat'); }}
+              className="sm:hidden text-gray-400 hover:text-gray-700 p-1.5 rounded-xl hover:bg-gray-100 transition-colors mr-1"
+            >
+              ←
+            </button>
             {partner && (
               <>
-                <div className="relative">
-                  <div className="w-9 h-9 rounded-full bg-pp-input-bg border border-pp-border flex items-center justify-center overflow-hidden">
-                    {partner.avatar
-                      ? <img src={partner.avatar} alt="" className="w-full h-full object-cover" />
-                      : <span className="text-gray-600 font-bold text-sm">{partner.username?.[0]?.toUpperCase()}</span>
-                    }
+                <Avatar user={partner} size={10} showOnline />
+                <div className="flex-1 min-w-0">
+                  <div className="font-semibold text-gray-900 text-sm truncate">{partner.username}</div>
+                  <div className="text-xs mt-0.5">
+                    <AnimatePresence mode="wait">
+                      {partnerTyping ? (
+                        <motion.span
+                          key="typing"
+                          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+                          className="text-pp-orange font-medium"
+                        >
+                          typing...
+                        </motion.span>
+                      ) : partner.isOnline ? (
+                        <motion.span key="online" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-green-500 font-medium">
+                          Online
+                        </motion.span>
+                      ) : (
+                        <motion.span key="offline" initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-gray-400">
+                          {formatLastSeen(partner.lastSeen)}
+                        </motion.span>
+                      )}
+                    </AnimatePresence>
                   </div>
-                  <span className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${partner.isOnline ? 'bg-green-500' : 'bg-gray-300'}`} />
                 </div>
-                <div>
-                  <div className="font-semibold text-gray-900 text-sm">{partner.username}</div>
-                  <div className="text-xs text-gray-400">
-                    {partnerTyping
-                      ? <span className="text-pp-orange animate-pulse">typing...</span>
-                      : partner.isOnline ? '🟢 Online' : `⚫ ${formatLastSeen(partner.lastSeen)}`
-                    }
-                  </div>
-                </div>
+                <button
+                  onClick={() => navigate(`/profile/${partner.username}`)}
+                  className="text-xs text-gray-400 hover:text-pp-orange transition-colors px-3 py-1.5 rounded-xl hover:bg-pp-orange-light border border-transparent hover:border-orange-200 font-medium"
+                >
+                  Profile →
+                </button>
               </>
             )}
           </div>
 
-          {/* Messages */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3">
+          {/* Messages area */}
+          <div className="flex-1 overflow-y-auto px-4 py-4 space-y-1">
             {loadingMsgs ? (
               <div className="flex items-center justify-center h-full">
-                <div className="animate-spin w-6 h-6 border-2 border-pp-orange border-t-transparent rounded-full" />
+                <div className="flex flex-col items-center gap-3">
+                  <div className="animate-spin w-7 h-7 border-2 border-pp-orange border-t-transparent rounded-full" />
+                  <span className="text-xs text-gray-400">Loading messages...</span>
+                </div>
               </div>
             ) : messages.length === 0 ? (
-              <div className="flex flex-col items-center justify-center h-full text-center">
-                <div className="text-4xl mb-3">👋</div>
-                <p className="text-gray-600 text-sm">Start your conversation with {partner?.username}!</p>
-                <p className="text-gray-400 text-xs mt-1">Good luck out there, duo!</p>
+              <div className="flex flex-col items-center justify-center h-full text-center gap-3">
+                <div className="w-20 h-20 rounded-3xl bg-white shadow-md flex items-center justify-center text-4xl border border-gray-100">
+                  👋
+                </div>
+                <div>
+                  <p className="font-semibold text-gray-700 text-sm">Say hello to {partner?.username}!</p>
+                  <p className="text-gray-400 text-xs mt-1">Good luck out there, duo 🎮</p>
+                </div>
               </div>
             ) : (
-              messages.map((msg) => (
-                <MessageBubble
-                  key={msg._id}
-                  message={msg}
-                  isOwn={msg.sender?._id === user?._id || msg.sender === user?._id}
-                />
-              ))
+              <>
+                {grouped.map((item) =>
+                  item.type === 'divider' ? (
+                    <DateDivider key={item.id} date={item.date} />
+                  ) : (
+                    <MessageBubble
+                      key={item.id}
+                      message={item.message}
+                      showAvatar={item.showAvatar}
+                      isOwn={item.message.sender?._id === user?._id || item.message.sender === user?._id}
+                    />
+                  )
+                )}
+                <AnimatePresence>
+                  {partnerTyping && <TypingIndicator key="typing" partner={partner} />}
+                </AnimatePresence>
+              </>
             )}
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Input */}
-          <div className="flex-shrink-0 p-4 border-t border-pp-border bg-white">
-            <div className="flex items-end gap-3">
+          {/* Input bar */}
+          <div className="flex-shrink-0 px-4 py-3 border-t border-white/60 bg-white/80 backdrop-blur-md">
+            <div className="flex items-end gap-2 bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-2"
+                 style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
               <textarea
-                ref={inputRef}
+                ref={textareaRef}
                 rows={1}
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
-                placeholder="Type a message... (Enter to send)"
-                className="input flex-1 resize-none min-h-[42px] max-h-28 py-2.5 rounded-2xl"
-                style={{ height: 'auto' }}
-                onInput={(e) => {
-                  e.target.style.height = 'auto';
-                  e.target.style.height = Math.min(e.target.scrollHeight, 112) + 'px';
-                }}
+                placeholder={`Message ${partner?.username || ''}…`}
+                className="flex-1 resize-none bg-transparent outline-none text-sm text-gray-800 placeholder-gray-400 py-1.5 min-h-[28px] max-h-28"
               />
               <button
                 onClick={handleSend}
                 disabled={!input.trim() || sending}
-                className="btn-primary p-2.5 aspect-square flex-shrink-0 disabled:opacity-40 rounded-xl"
+                className={`flex-shrink-0 w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 ${
+                  input.trim() && !sending
+                    ? 'bg-pp-orange hover:bg-orange-600 text-white shadow-sm hover:shadow-md hover:scale-105'
+                    : 'bg-gray-100 text-gray-300 cursor-not-allowed'
+                }`}
               >
-                <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
-                </svg>
+                {sending ? (
+                  <div className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <svg className="w-4 h-4" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                  </svg>
+                )}
               </button>
             </div>
+            <p className="text-[10px] text-gray-400 text-center mt-1.5">Enter to send · Shift+Enter for new line</p>
           </div>
         </div>
       ) : (
-        <div className="flex-1 hidden sm:flex items-center justify-center bg-pp-bg">
+        /* No conversation selected */
+        <div className="flex-1 hidden sm:flex items-center justify-center"
+             style={{ background: 'linear-gradient(160deg, #fdf6f0 0%, #f8f9fb 60%, #f0f4ff 100%)' }}>
           <div className="text-center">
-            <div className="text-6xl mb-4">💬</div>
-            <h3 className="font-display font-bold text-xl text-gray-900 mb-2">SELECT A CONVERSATION</h3>
-            <p className="text-gray-400 text-sm">Choose from the left to start chatting</p>
+            <motion.div
+              animate={{ y: [0, -8, 0] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              className="w-24 h-24 rounded-3xl bg-white shadow-lg flex items-center justify-center text-5xl mx-auto mb-6 border border-gray-100"
+            >
+              💬
+            </motion.div>
+            <h3 className="font-hero text-xl text-gray-800 mb-2 tracking-wide">Your Messages</h3>
+            <p className="text-gray-400 text-sm">Select a conversation to start chatting</p>
           </div>
         </div>
       )}
