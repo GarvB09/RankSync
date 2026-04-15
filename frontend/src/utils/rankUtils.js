@@ -16,15 +16,23 @@ export const RANKS = [
 
 export const RANK_TIERS = ['Iron', 'Bronze', 'Silver', 'Gold', 'Platinum', 'Diamond', 'Ascendant', 'Immortal', 'Radiant'];
 
+// Asia-Pacific regions (Valorant AP server countries)
 export const REGIONS = [
-  'Andhra Pradesh', 'Arunachal Pradesh', 'Assam', 'Bihar', 'Chhattisgarh',
-  'Delhi', 'Goa', 'Gujarat', 'Haryana', 'Himachal Pradesh',
-  'Jharkhand', 'Karnataka', 'Kerala', 'Madhya Pradesh', 'Maharashtra',
-  'Manipur', 'Meghalaya', 'Mizoram', 'Nagaland', 'Odisha',
-  'Punjab', 'Rajasthan', 'Sikkim', 'Tamil Nadu', 'Telangana',
-  'Tripura', 'Uttar Pradesh', 'Uttarakhand', 'West Bengal',
-  'Jammu & Kashmir', 'Chandigarh', 'Puducherry',
+  'India', 'Japan', 'South Korea', 'Singapore', 'Hong Kong', 'Taiwan',
+  'Thailand', 'Indonesia', 'Malaysia', 'Philippines', 'Vietnam',
+  'Australia', 'New Zealand', 'Pakistan', 'Bangladesh', 'Nepal', 'Sri Lanka',
 ];
+
+export const REGION_FLAGS = {
+  'India': '🇮🇳', 'Japan': '🇯🇵', 'South Korea': '🇰🇷',
+  'Singapore': '🇸🇬', 'Hong Kong': '🇭🇰', 'Taiwan': '🇹🇼',
+  'Thailand': '🇹🇭', 'Indonesia': '🇮🇩', 'Malaysia': '🇲🇾',
+  'Philippines': '🇵🇭', 'Vietnam': '🇻🇳', 'Australia': '🇦🇺',
+  'New Zealand': '🇳🇿', 'Pakistan': '🇵🇰', 'Bangladesh': '🇧🇩',
+  'Nepal': '🇳🇵', 'Sri Lanka': '🇱🇰',
+};
+
+export const getRegionFlag = (region) => REGION_FLAGS[region] || '🌏';
 
 export const ROLES = ['Duelist', 'Controller', 'Initiator', 'Sentinel', 'Flex'];
 

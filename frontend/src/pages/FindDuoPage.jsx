@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import {
-  RANKS, REGIONS, ROLES, PLAYSTYLES,
+  RANKS, REGIONS, REGION_FLAGS, getRegionFlag,
   getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, formatLastSeen,
 } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
@@ -343,7 +343,7 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
             <div className="text-xs text-gray-400 font-mono mt-0.5">
               {player.riotId.gameName}#{player.riotId.tagLine}
               <span className="mx-1.5 text-gray-300">·</span>
-              {player.region}{player.city ? `, ${player.city}` : ''}
+              {getRegionFlag(player.region)} {player.region}
             </div>
           )}
         </div>
@@ -429,15 +429,11 @@ function FilterPanel({ filters, onChange, onReset }) {
       </div>
 
       <div>
-        <label className="input-label">State</label>
+        <label className="input-label">🌏 Region</label>
         <select className="input" value={filters.region} onChange={(e) => set('region', e.target.value)}>
-          <option value="">All India</option>
-          {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
+          <option value="">All Asia Pacific</option>
+          {REGIONS.map((r) => <option key={r} value={r}>{REGION_FLAGS[r]} {r}</option>)}
         </select>
-        <div className="mt-2 flex items-center gap-2 px-3 py-1.5 rounded-xl border border-pp-border bg-pp-input-bg opacity-50">
-          <span className="text-xs text-gray-500">🌐 Cross Region</span>
-          <span className="text-xs text-pp-orange font-semibold">Coming Soon</span>
-        </div>
       </div>
 
       <div>

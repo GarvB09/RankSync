@@ -28,7 +28,7 @@ exports.getProfile = async (req, res, next) => {
 exports.updateProfile = async (req, res, next) => {
   try {
     const allowedFields = [
-      'bio', 'age', 'gender', 'region', 'city', 'roles', 'playstyleTags', 'voiceChatPreference',
+      'bio', 'age', 'gender', 'region', 'roles', 'playstyleTags', 'voiceChatPreference',
       'preferredRankMin', 'preferredRankMax', 'availability',
       'favoriteAgents', 'avatar', 'trackerUrl',
     ];

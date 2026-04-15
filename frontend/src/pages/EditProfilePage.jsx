@@ -6,7 +6,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../context/authStore';
 import api, { API_URL } from '../utils/api';
-import { RANKS, REGIONS, ROLES, PLAYSTYLES, AGENTS, getRankColorClass, getRankEmoji, getAgentIcon } from '../utils/rankUtils';
+import { RANKS, REGIONS, REGION_FLAGS, ROLES, PLAYSTYLES, AGENTS, getRankColorClass, getRankEmoji, getAgentIcon } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
 const VOICE_OPTIONS = [
@@ -21,7 +21,7 @@ export default function EditProfilePage() {
   const navigate = useNavigate();
 
   const [form, setForm] = useState({
-    bio: '', age: '', gender: '', region: '', city: '',
+    bio: '', age: '', gender: '', region: '',
     roles: [], playstyleTags: [], voiceChatPreference: 'preferred',
     preferredRankMin: 'Silver 1', preferredRankMax: 'Gold 3', favoriteAgents: [],
     trackerUrl: '',
@@ -43,7 +43,7 @@ export default function EditProfilePage() {
     if (user) {
       setForm({
         bio: user.bio || '', age: user.age || '', gender: user.gender || '',
-        region: user.region || '', city: user.city || '',
+        region: user.region || '',
         roles: user.roles || [], playstyleTags: user.playstyleTags || [],
         voiceChatPreference: user.voiceChatPreference || 'preferred',
         preferredRankMin: user.preferredRankMin || 'Silver 1',
@@ -293,26 +293,13 @@ export default function EditProfilePage() {
             </div>
           )}
 
-          {/* State + City */}
-          <div className="space-y-3 pt-2 border-t border-pp-border">
-            <div>
-              <label className="input-label">State</label>
-              <div className="flex gap-3 flex-wrap items-center">
-                <select className="input flex-1 max-w-xs" value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })}>
-                  <option value="">— Select your state —</option>
-                  {REGIONS.map((r) => <option key={r} value={r}>{r}</option>)}
-                </select>
-                <div className="flex items-center gap-2 px-3 py-2 rounded-xl border border-pp-border bg-pp-input-bg opacity-50 cursor-not-allowed select-none">
-                  <span className="text-xs text-gray-400">🌐 Cross Region</span>
-                  <span className="text-xs text-pp-orange font-semibold">Coming Soon</span>
-                </div>
-              </div>
-            </div>
-            <div>
-              <label className="input-label">City <span className="text-gray-400 normal-case tracking-normal font-normal">(optional)</span></label>
-              <input type="text" className="input max-w-xs" placeholder="e.g. Mumbai, Bengaluru..."
-                maxLength={50} value={form.city} onChange={(e) => setForm({ ...form, city: e.target.value })} />
-            </div>
+          {/* Region */}
+          <div className="pt-2 border-t border-pp-border">
+            <label className="input-label">Region (Asia Pacific)</label>
+            <select className="input max-w-xs" value={form.region} onChange={(e) => setForm({ ...form, region: e.target.value })}>
+              <option value="">— Select your region —</option>
+              {REGIONS.map((r) => <option key={r} value={r}>{REGION_FLAGS[r]} {r}</option>)}
+            </select>
           </div>
         </section>
 
