@@ -303,7 +303,7 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
         <div className="mt-2 flex items-center gap-2 flex-wrap justify-center px-3">
           <span className={`font-mono font-bold text-sm flex items-center gap-1.5 ${getRankColorClass(player.rank)}`}>
             {getRankIcon(player.rank)
-              ? <img src={getRankIcon(player.rank)} alt={player.rank} className="w-6 h-6 object-contain" />
+              ? <img src={getRankIcon(player.rank)} alt={player.rank} className="w-6 h-6 object-contain" style={{filter:'drop-shadow(0 1px 3px rgba(0,0,0,0.45))'}} />
               : <span>{getRankEmoji(player.rank)}</span>
             }
             {player.rank}

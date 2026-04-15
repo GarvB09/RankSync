@@ -124,7 +124,7 @@ export default function ProfilePage() {
             <div className="flex items-center gap-3 mt-2 flex-wrap">
               <span className={`font-mono font-bold flex items-center gap-2 ${getRankColorClass(profile.rank)}`}>
                 {getRankIcon(profile.rank)
-                  ? <img src={getRankIcon(profile.rank)} alt={profile.rank} className="w-8 h-8 object-contain" />
+                  ? <img src={getRankIcon(profile.rank)} alt={profile.rank} className="w-8 h-8 object-contain" style={{filter:'drop-shadow(0 1px 4px rgba(0,0,0,0.45))'}} />
                   : <span className="text-lg">{getRankEmoji(profile.rank)}</span>
                 }
                 <span className="text-lg">{profile.rank || 'Unranked'}</span>

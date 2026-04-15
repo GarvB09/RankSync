@@ -94,7 +94,7 @@ export default function AppLayout() {
               <div className="text-sm font-semibold text-gray-900 truncate">{user.username}</div>
               <div className={`text-xs font-mono flex items-center gap-1 ${getRankColorClass(user.rank)}`}>
                 {getRankIcon(user.rank)
-                  ? <img src={getRankIcon(user.rank)} alt="" className="w-4 h-4 object-contain" />
+                  ? <img src={getRankIcon(user.rank)} alt="" className="w-4 h-4 object-contain" style={{filter:'drop-shadow(0 1px 3px rgba(0,0,0,0.45))'}} />
                   : <span>{getRankEmoji(user.rank)}</span>
                 }
                 {user.rank || 'Unranked'}

@@ -72,7 +72,7 @@ export default function DashboardPage() {
           </h1>
           <p className="text-gray-500 text-sm mt-1">
             {getRankIcon(user?.rank)
-              ? <img src={getRankIcon(user?.rank)} alt="" className="inline w-4 h-4 object-contain mr-1 -mt-0.5" />
+              ? <img src={getRankIcon(user?.rank)} alt="" className="inline w-4 h-4 object-contain mr-1 -mt-0.5" style={{filter:'drop-shadow(0 1px 3px rgba(0,0,0,0.45))'}} />
               : getRankEmoji(user?.rank) + ' '
             }{user?.rank || 'Unranked'} ·{' '}
             {user?.region
@@ -151,7 +151,7 @@ export default function DashboardPage() {
                 <div className="flex-1 min-w-0">
                   <div className="font-semibold text-gray-900 text-sm truncate">{requester.username}</div>
                   <div className={`text-xs flex items-center gap-1 ${getRankColorClass(requester.rank)}`}>
-                    {getRankIcon(requester.rank) && <img src={getRankIcon(requester.rank)} alt="" className="w-4 h-4 object-contain" />}
+                    {getRankIcon(requester.rank) && <img src={getRankIcon(requester.rank)} alt="" className="w-4 h-4 object-contain" style={{filter:'drop-shadow(0 1px 3px rgba(0,0,0,0.45))'}} />}
                     {requester.rank}
                   </div>
                   <div className="flex gap-1.5 mt-2">
@@ -217,7 +217,7 @@ export default function DashboardPage() {
                 </div>
                 <div className={`text-sm font-mono font-medium flex items-center gap-1.5 ${getRankColorClass(conn.rank)}`}>
                   {getRankIcon(conn.rank)
-                    ? <img src={getRankIcon(conn.rank)} alt="" className="w-5 h-5 object-contain" />
+                    ? <img src={getRankIcon(conn.rank)} alt="" className="w-5 h-5 object-contain" style={{filter:'drop-shadow(0 1px 3px rgba(0,0,0,0.45))'}} />
                     : <span>{getRankEmoji(conn.rank)}</span>
                   }
                   {conn.rank}
