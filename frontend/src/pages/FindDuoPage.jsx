@@ -198,12 +198,28 @@ function FistbumpOverlay({ onDone }) {
   );
 }
 
+// ─── Rank tier banner gradients ──────────────────────────────────────────────
+const TIER_BANNER = {
+  iron:      { bg: 'from-slate-500 to-slate-700',     text: 'text-slate-100' },
+  bronze:    { bg: 'from-amber-600 to-amber-800',      text: 'text-amber-100' },
+  silver:    { bg: 'from-slate-400 to-slate-600',      text: 'text-slate-100' },
+  gold:      { bg: 'from-yellow-400 to-amber-500',     text: 'text-yellow-900' },
+  platinum:  { bg: 'from-teal-400 to-teal-700',        text: 'text-teal-100' },
+  diamond:   { bg: 'from-blue-400 to-blue-700',        text: 'text-blue-100' },
+  ascendant: { bg: 'from-purple-500 to-purple-800',    text: 'text-purple-100' },
+  immortal:  { bg: 'from-rose-500 to-red-700',         text: 'text-rose-100' },
+  radiant:   { bg: 'from-yellow-300 to-orange-500',    text: 'text-yellow-900' },
+};
+
 // ─── Player Card ──────────────────────────────────────────────────────────────
 function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpUsed, onLikeUsed, onFistbumpUsed, onPassed, onFistbumpAnim }) {
   const [status, setStatus] = useState(player.connectionStatus || 'none');
   const [sending, setSending] = useState(false);
   const [anim, setAnim] = useState(null);
   const [visible, setVisible] = useState(true);
+
+  const tier = player.rank?.split(' ')[0]?.toLowerCase() || '';
+  const banner = TIER_BANNER[tier] || { bg: 'from-pp-orange to-orange-600', text: 'text-white' };
 
   const handleConnect = async () => {
     if (likesLeft <= 0) { toast.error('No connects left today! Come back tomorrow 🎮'); return; }
@@ -226,7 +242,7 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
       if (result.success) {
         setStatus('pending_sent');
         onFistbumpUsed();
-        onFistbumpAnim(); // trigger full-screen animation
+        onFistbumpAnim();
       }
       setSending(false);
       setTimeout(() => setAnim(null), 300);
@@ -242,28 +258,29 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ delay: index * 0.05, duration: 0.3 }}
-      className="bg-white border border-pp-border rounded-2xl overflow-hidden flex flex-col group hover:shadow-md transition-shadow relative"
+      initial={{ opacity: 0, y: 24, scale: 0.97 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      exit={{ opacity: 0, scale: 0.94 }}
+      transition={{ delay: index * 0.04, duration: 0.28, ease: 'easeOut' }}
+      className="bg-white rounded-3xl overflow-hidden flex flex-col relative group"
+      style={{ boxShadow: '0 2px 16px rgba(0,0,0,0.08), 0 1px 3px rgba(0,0,0,0.05)' }}
     >
-      {/* Card anim overlay */}
+      {/* ── Anim overlay ── */}
       <AnimatePresence>
         {anim && (
           <motion.div
             key={anim}
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-            className="absolute inset-0 z-30 flex items-center justify-center rounded-2xl"
+            className="absolute inset-0 z-30 flex items-center justify-center rounded-3xl"
             style={{
-              background: anim === 'like' ? 'rgba(255,107,0,0.15)'
-                : anim === 'fistbump' ? 'rgba(255,107,0,0.2)'
-                : 'rgba(0,0,0,0.12)',
+              background: anim === 'like' ? 'rgba(255,107,0,0.18)'
+                : anim === 'fistbump' ? 'rgba(255,107,0,0.22)'
+                : 'rgba(0,0,0,0.14)',
             }}
           >
             <motion.div
-              initial={{ scale: 0.3 }} animate={{ scale: 1.2 }} exit={{ scale: 2, opacity: 0 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 18 }}
+              initial={{ scale: 0.3, rotate: -10 }} animate={{ scale: 1.2, rotate: 0 }} exit={{ scale: 2, opacity: 0 }}
+              transition={{ type: 'spring', stiffness: 280, damping: 16 }}
             >
               {anim === 'like' ? <span className="text-8xl">🎮</span>
                 : anim === 'fistbump' ? <span className="text-8xl">🤜</span>
@@ -273,107 +290,144 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
         )}
       </AnimatePresence>
 
-      {/* Card header — circular avatar */}
-      <div className="relative bg-gradient-to-b from-pp-orange-light to-white pt-5 pb-3 flex flex-col items-center flex-shrink-0">
+      {/* ── Banner ── */}
+      <div className={`relative bg-gradient-to-br ${banner.bg} h-24 flex-shrink-0 overflow-hidden`}>
+        {/* Decorative orbs */}
+        <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full bg-white/10" />
+        <div className="absolute -bottom-4 -left-4 w-16 h-16 rounded-full bg-white/10" />
+
+        {/* Online bar */}
         {player.isOnline && (
-          <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent" />
+          <div className="absolute top-0 inset-x-0 h-0.5 bg-green-400" />
         )}
 
-        {/* Avatar circle */}
-        <div className="relative">
-          {player.avatar ? (
-            <img
-              src={player.avatar}
-              alt=""
-              className="w-28 h-28 rounded-full object-cover border-4 border-white shadow-md group-hover:scale-105 transition-transform duration-500"
-            />
-          ) : (
-            <div className="w-28 h-28 rounded-full border-4 border-white shadow-md bg-pp-input-bg flex items-center justify-center">
-              <span className="text-5xl text-gray-300 leading-none select-none font-hero">
-                {player.username[0].toUpperCase()}
-              </span>
-            </div>
-          )}
-          {player.isOnline && (
-            <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-sm" />
-          )}
+        {/* Rank badge — top left */}
+        <div className="absolute top-3 left-3 flex items-center gap-1.5 bg-black/20 backdrop-blur-sm rounded-xl px-2 py-1">
+          {getRankIcon(player.rank)
+            ? <img src={getRankIcon(player.rank)} alt={player.rank} className="w-5 h-5 object-contain" style={{filter:'drop-shadow(0 1px 3px rgba(0,0,0,0.5))'}} />
+            : <span className="text-sm">{getRankEmoji(player.rank)}</span>
+          }
+          <span className={`text-xs font-bold ${banner.text} leading-none`}>{player.rank}</span>
         </div>
 
-        {/* Rank + meta badges */}
-        <div className="mt-2 flex items-center gap-2 flex-wrap justify-center px-3">
-          <span className={`font-mono font-bold text-sm flex items-center gap-1.5 ${getRankColorClass(player.rank)}`}>
-            {getRankIcon(player.rank)
-              ? <img src={getRankIcon(player.rank)} alt={player.rank} className="w-6 h-6 object-contain" style={{filter:'drop-shadow(0 1px 3px rgba(0,0,0,0.45))'}} />
-              : <span>{getRankEmoji(player.rank)}</span>
-            }
-            {player.rank}
-          </span>
+        {/* Meta badges — top right */}
+        <div className="absolute top-3 right-3 flex items-center gap-1">
           {player.gender && (
-            <span className="text-xs text-gray-500 bg-white/80 rounded-full px-2 py-0.5 border border-pp-border">
+            <span className="text-[11px] font-semibold bg-black/20 backdrop-blur-sm text-white rounded-lg px-2 py-0.5">
               {player.gender === 'Male' ? '♂' : player.gender === 'Female' ? '♀' : '⚧'} {player.gender}
             </span>
           )}
           {player.age && (
-            <span className="text-xs text-gray-500 bg-white/80 rounded-full px-2 py-0.5 border border-pp-border">
+            <span className="text-[11px] font-semibold bg-black/20 backdrop-blur-sm text-white rounded-lg px-2 py-0.5">
               {player.age}
             </span>
           )}
         </div>
-      </div>
 
-      {/* Info */}
-      <div className="p-4 flex flex-col gap-3 flex-1">
-        <div>
-          <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-display font-bold text-gray-900 text-lg leading-tight">{player.username}</h3>
-            {!player.isOnline && <span className="text-xs text-gray-400">{formatLastSeen(player.lastSeen)}</span>}
-            {player.trackerUrl && (
-              <a
-                href={player.trackerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={(e) => e.stopPropagation()}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-pp-orange-light border border-orange-200 text-pp-orange text-[10px] font-semibold hover:bg-orange-100 transition-colors"
+        {/* Avatar — overflows banner */}
+        <div className="absolute -bottom-10 left-1/2 -translate-x-1/2">
+          <div className="relative">
+            {player.avatar ? (
+              <img
+                src={player.avatar}
+                alt=""
+                className="w-20 h-20 rounded-full object-cover border-4 border-white group-hover:scale-105 transition-transform duration-500"
+                style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}
+              />
+            ) : (
+              <div
+                className="w-20 h-20 rounded-full border-4 border-white bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center group-hover:scale-105 transition-transform duration-500"
+                style={{ boxShadow: '0 4px 16px rgba(0,0,0,0.15)' }}
               >
-                🔗 Verify
-              </a>
+                <span className="text-3xl font-bold text-gray-400 select-none font-hero">
+                  {player.username[0].toUpperCase()}
+                </span>
+              </div>
+            )}
+            {player.isOnline && (
+              <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-400 border-2 border-white shadow" />
             )}
           </div>
-          {player.riotId?.gameName && (
-            <div className="text-xs text-gray-400 font-mono mt-0.5">
-              {player.riotId.gameName}#{player.riotId.tagLine}
-              <span className="mx-1.5 text-gray-300">·</span>
-              {getRegionFlagUrl(player.region) && (
-                <img src={getRegionFlagUrl(player.region)} alt="" className="inline w-4 h-3 object-cover rounded-sm mr-0.5" />
-              )}
-              {player.region}
-            </div>
+        </div>
+      </div>
+
+      {/* Avatar spacing */}
+      <div className="h-12" />
+
+      {/* ── Card body ── */}
+      <div className="px-4 pb-1 flex flex-col items-center text-center">
+        {/* Name row */}
+        <div className="flex items-center gap-1.5 flex-wrap justify-center">
+          <h3 className="font-display font-bold text-gray-900 text-lg leading-tight">{player.username}</h3>
+          {player.trackerUrl && (
+            <a
+              href={player.trackerUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              onClick={(e) => e.stopPropagation()}
+              className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-full bg-pp-orange-light border border-orange-200 text-pp-orange text-[10px] font-semibold hover:bg-orange-100 transition-colors"
+            >
+              🔗 Verified
+            </a>
           )}
         </div>
 
-        {player.bio && <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{player.bio}</p>}
-
-        <div className="flex flex-wrap gap-1.5">
-          {player.roles?.slice(0, 2).map((r) => (
-            <span key={r} className="text-xs bg-pp-input-bg text-gray-600 border border-pp-border px-2 py-0.5 rounded-full">
-              {getRoleIcon(r)} {r}
+        {/* Sub-info row */}
+        <div className="flex items-center gap-1.5 mt-1 flex-wrap justify-center">
+          {player.riotId?.gameName && (
+            <span className="text-[11px] text-gray-400 font-mono">
+              {player.riotId.gameName}#{player.riotId.tagLine}
             </span>
-          ))}
-          {player.playstyleTags?.slice(0, 2).map((tag) => (
-            <span key={tag} className="text-xs bg-pp-orange-light text-pp-orange border border-orange-200 px-2 py-0.5 rounded-full">
-              {tag}
-            </span>
-          ))}
+          )}
+          {player.region && (
+            <>
+              <span className="text-gray-300 text-xs">·</span>
+              <span className="flex items-center gap-1 text-[11px] text-gray-500">
+                {getRegionFlagUrl(player.region) && (
+                  <img src={getRegionFlagUrl(player.region)} alt="" className="w-4 h-3 object-cover rounded-sm" />
+                )}
+                {player.region}
+              </span>
+            </>
+          )}
+          {!player.isOnline && player.lastSeen && (
+            <>
+              <span className="text-gray-300 text-xs">·</span>
+              <span className="text-[11px] text-gray-400">{formatLastSeen(player.lastSeen)}</span>
+            </>
+          )}
         </div>
+
+        {/* Bio */}
+        {player.bio && (
+          <p className="text-xs text-gray-500 leading-relaxed line-clamp-2 mt-2 max-w-[200px]">{player.bio}</p>
+        )}
       </div>
 
-      {/* Action buttons */}
-      <div className="px-4 pb-4 flex gap-2">
+      {/* ── Tags ── */}
+      <div className="px-4 pb-3 mt-2 flex flex-wrap gap-1.5 justify-center">
+        {player.roles?.slice(0, 2).map((r) => (
+          <span key={r} className="text-[11px] bg-gray-50 text-gray-600 border border-gray-200 px-2.5 py-1 rounded-full font-medium">
+            {getRoleIcon(r)} {r}
+          </span>
+        ))}
+        {player.playstyleTags?.slice(0, 2).map((tag) => (
+          <span key={tag} className="text-[11px] bg-pp-orange-light text-pp-orange border border-orange-200 px-2.5 py-1 rounded-full font-medium">
+            {tag}
+          </span>
+        ))}
+      </div>
+
+      {/* ── Divider ── */}
+      <div className="mx-4 h-px bg-gray-100" />
+
+      {/* ── Action buttons ── */}
+      <div className="p-3 flex gap-2">
         {status === 'none' && (
           <>
             <button
               onClick={handlePass}
-              className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full border border-pp-border text-gray-400 hover:border-gray-400 hover:text-gray-600 transition-colors"
+              className="w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-2xl border border-gray-200 text-gray-400 hover:border-red-200 hover:bg-red-50 hover:text-red-400 transition-all text-base font-bold"
             >
               ✕
             </button>
@@ -381,10 +435,10 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
               onClick={handleFistbump}
               disabled={sending || fistbumpUsed}
               title={fistbumpUsed ? 'Used this week — resets Monday' : '1 Fistbump per week 🤜'}
-              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-full border text-lg transition-all ${
+              className={`w-10 h-10 flex-shrink-0 flex items-center justify-center rounded-2xl border text-lg transition-all ${
                 fistbumpUsed
-                  ? 'border-gray-200 text-gray-300 cursor-not-allowed'
-                  : 'border-orange-300 text-orange-500 hover:bg-orange-50 hover:border-orange-400 hover:scale-110'
+                  ? 'border-gray-100 text-gray-300 bg-gray-50 cursor-not-allowed'
+                  : 'border-orange-200 text-orange-500 hover:bg-orange-50 hover:border-orange-300 hover:scale-110 active:scale-95'
               }`}
             >
               🤜
@@ -392,26 +446,31 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
             <button
               onClick={handleConnect}
               disabled={sending || likesLeft <= 0}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-full font-display font-bold text-sm tracking-wide text-white transition-colors disabled:opacity-40 ${
-                likesLeft <= 0 ? 'bg-gray-300 cursor-not-allowed' : 'bg-pp-orange hover:bg-pp-orange-dark'
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-2xl font-display font-bold text-sm tracking-wide text-white transition-all active:scale-95 disabled:opacity-40 ${
+                likesLeft <= 0
+                  ? 'bg-gray-200 text-gray-400 cursor-not-allowed'
+                  : 'bg-gradient-to-r from-pp-orange to-orange-500 hover:from-orange-500 hover:to-orange-600 shadow-sm hover:shadow-md'
               }`}
             >
-              {sending ? '...' : `🎮  Connect${likesLeft <= 0 ? ' (0 left)' : ''}`}
+              {sending
+                ? <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                : <>{likesLeft <= 0 ? 'Limit reached' : '🎮 Connect'}</>
+              }
             </button>
           </>
         )}
         {status === 'pending_sent' && (
-          <div className="flex-1 py-2.5 text-center text-xs text-gray-500 bg-pp-input-bg rounded-full border border-pp-border">
+          <div className="flex-1 py-2.5 text-center text-xs text-gray-500 bg-gray-50 rounded-2xl border border-gray-200 font-medium">
             ⏳ Request Sent
           </div>
         )}
         {status === 'pending_received' && (
-          <div className="flex-1 py-2.5 text-center text-xs text-teal-600 bg-teal-50 rounded-full border border-teal-200">
+          <div className="flex-1 py-2.5 text-center text-xs text-teal-600 bg-teal-50 rounded-2xl border border-teal-200 font-medium">
             📨 Check Dashboard!
           </div>
         )}
         {status === 'connected' && (
-          <div className="flex-1 py-2.5 text-center text-xs text-green-600 bg-green-50 rounded-full border border-green-200">
+          <div className="flex-1 py-2.5 text-center text-xs text-green-600 bg-green-50 rounded-2xl border border-green-200 font-medium">
             ✅ Connected
           </div>
         )}
