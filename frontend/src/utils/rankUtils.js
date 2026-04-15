@@ -34,12 +34,12 @@ const REGION_CODES = {
 };
 
 /**
- * Returns a PNG flag image URL from flagcdn.com.
+ * Returns an SVG flag image URL from the flag-icons GitHub CDN.
  * Usage: <img src={getRegionFlagUrl('India')} className="w-5 h-4 object-cover rounded-sm" />
  */
 export const getRegionFlagUrl = (region) => {
   const code = REGION_CODES[region];
-  return code ? `https://flagcdn.com/w40/${code}.png` : null;
+  return code ? `https://raw.githubusercontent.com/lipis/flag-icons/main/flags/4x3/${code}.svg` : null;
 };
 
 // Keep emoji map for <select> options (HTML options can't render images)
