@@ -7,7 +7,7 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useAuthStore from '../context/authStore';
 import api, { API_URL } from '../utils/api';
-import { getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, getRegionFlag, formatLastSeen, getAgentIcon } from '../utils/rankUtils';
+import { getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, getRegionFlagUrl, formatLastSeen, getAgentIcon } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
 export default function ProfilePage() {
@@ -130,7 +130,12 @@ export default function ProfilePage() {
                 <span className="text-lg">{profile.rank || 'Unranked'}</span>
               </span>
               <span className="text-gray-300">·</span>
-              <span className="text-sm text-gray-500">{getRegionFlag(profile.region)} {profile.region}</span>
+              {profile.region && (
+                <span className="text-sm text-gray-500 flex items-center gap-1.5">
+                  <img src={getRegionFlagUrl(profile.region)} alt="" className="w-5 h-3.5 object-cover rounded-sm" />
+                  {profile.region}
+                </span>
+              )}
               {vcLabel && <><span className="text-gray-300">·</span><span className="text-sm text-gray-500">{vcLabel}</span></>}
             </div>
             {profile.trackerUrl && (

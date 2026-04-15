@@ -6,7 +6,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import api from '../utils/api';
 import {
-  RANKS, REGIONS, REGION_FLAGS, ROLES, PLAYSTYLES, getRegionFlag,
+  RANKS, REGIONS, REGION_FLAGS, ROLES, PLAYSTYLES, getRegionFlagUrl,
   getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, formatLastSeen,
 } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
@@ -343,7 +343,10 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
             <div className="text-xs text-gray-400 font-mono mt-0.5">
               {player.riotId.gameName}#{player.riotId.tagLine}
               <span className="mx-1.5 text-gray-300">·</span>
-              {getRegionFlag(player.region)} {player.region}
+              {getRegionFlagUrl(player.region) && (
+                <img src={getRegionFlagUrl(player.region)} alt="" className="inline w-4 h-3 object-cover rounded-sm mr-0.5" />
+              )}
+              {player.region}
             </div>
           )}
         </div>

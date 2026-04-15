@@ -7,7 +7,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useAuthStore from '../context/authStore';
 import api from '../utils/api';
-import { getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, getRegionFlag, formatLastSeen } from '../utils/rankUtils';
+import { getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, getRegionFlagUrl, formatLastSeen } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
 const STAT_ACCENTS = [
@@ -74,7 +74,14 @@ export default function DashboardPage() {
             {getRankIcon(user?.rank)
               ? <img src={getRankIcon(user?.rank)} alt="" className="inline w-4 h-4 object-contain mr-1 -mt-0.5" />
               : getRankEmoji(user?.rank) + ' '
-            }{user?.rank || 'Unranked'} · {user?.region ? `${getRegionFlag(user.region)} ${user.region}` : 'No region set'}
+            }{user?.rank || 'Unranked'} ·{' '}
+            {user?.region
+              ? <span className="inline-flex items-center gap-1">
+                  <img src={getRegionFlagUrl(user.region)} alt="" className="inline w-4 h-3 object-cover rounded-sm" />
+                  {user.region}
+                </span>
+              : 'No region set'
+            }
           </p>
         </div>
         <Link to="/find-duo" className="btn-primary">
@@ -104,7 +111,17 @@ export default function DashboardPage() {
         <StatCard label="Connections" value={connections.connections.length} sub="Active duos" delay={0.05} accent={0} />
         <StatCard label="Pending" value={connections.receivedRequests.length} sub="Awaiting your reply" delay={0.1} accent={1} />
         <StatCard label="Rank" value={user?.rank?.split(' ')[0] || '—'} sub={user?.rank || 'Link Riot account'} delay={0.15} accent={2} />
-        <StatCard label="Region" value={user?.region ? `${getRegionFlag(user.region)} ${user.region}` : '—'} sub={user?.region ? 'Asia Pacific' : 'Set in profile'} delay={0.2} accent={3} />
+        <StatCard
+          label="Region"
+          value={user?.region
+            ? <span className="flex items-center gap-2">
+                <img src={getRegionFlagUrl(user.region)} alt="" className="w-7 h-5 object-cover rounded-sm" />
+                {user.region}
+              </span>
+            : '—'}
+          sub={user?.region ? 'Asia Pacific' : 'Set in profile'}
+          delay={0.2} accent={3}
+        />
       </div>
 
       {/* Incoming requests */}

@@ -23,6 +23,26 @@ export const REGIONS = [
   'Australia', 'New Zealand', 'Pakistan', 'Bangladesh', 'Nepal', 'Sri Lanka',
 ];
 
+// ISO 3166-1 alpha-2 codes for flagcdn.com PNG flags
+const REGION_CODES = {
+  'India': 'in', 'Japan': 'jp', 'South Korea': 'kr',
+  'Singapore': 'sg', 'Hong Kong': 'hk', 'Taiwan': 'tw',
+  'Thailand': 'th', 'Indonesia': 'id', 'Malaysia': 'my',
+  'Philippines': 'ph', 'Vietnam': 'vn', 'Australia': 'au',
+  'New Zealand': 'nz', 'Pakistan': 'pk', 'Bangladesh': 'bd',
+  'Nepal': 'np', 'Sri Lanka': 'lk',
+};
+
+/**
+ * Returns a PNG flag image URL from flagcdn.com.
+ * Usage: <img src={getRegionFlagUrl('India')} className="w-5 h-4 object-cover rounded-sm" />
+ */
+export const getRegionFlagUrl = (region) => {
+  const code = REGION_CODES[region];
+  return code ? `https://flagcdn.com/w40/${code}.png` : null;
+};
+
+// Keep emoji map for <select> options (HTML options can't render images)
 export const REGION_FLAGS = {
   'India': '🇮🇳', 'Japan': '🇯🇵', 'South Korea': '🇰🇷',
   'Singapore': '🇸🇬', 'Hong Kong': '🇭🇰', 'Taiwan': '🇹🇼',
@@ -31,8 +51,6 @@ export const REGION_FLAGS = {
   'New Zealand': '🇳🇿', 'Pakistan': '🇵🇰', 'Bangladesh': '🇧🇩',
   'Nepal': '🇳🇵', 'Sri Lanka': '🇱🇰',
 };
-
-export const getRegionFlag = (region) => REGION_FLAGS[region] || '🌏';
 
 export const ROLES = ['Duelist', 'Controller', 'Initiator', 'Sentinel', 'Flex'];
 
