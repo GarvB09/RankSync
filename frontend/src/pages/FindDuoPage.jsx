@@ -9,6 +9,7 @@ import {
   RANKS, REGIONS, REGION_FLAGS, ROLES, PLAYSTYLES, getRegionFlagUrl,
   getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, formatLastSeen,
 } from '../utils/rankUtils';
+import RankIcon from '../components/RankIcon';
 import toast from 'react-hot-toast';
 
 const DAILY_LIKE_LIMIT = 5;
@@ -302,10 +303,7 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
         {/* Rank + meta badges */}
         <div className="mt-2 flex items-center gap-2 flex-wrap justify-center px-3">
           <span className={`font-mono font-bold text-sm flex items-center gap-1.5 ${getRankColorClass(player.rank)}`}>
-            {getRankIcon(player.rank)
-              ? <img src={getRankIcon(player.rank)} alt={player.rank} className="w-6 h-6 object-contain" style={{filter:'drop-shadow(0 1px 3px rgba(0,0,0,0.45))'}} />
-              : <span>{getRankEmoji(player.rank)}</span>
-            }
+            <RankIcon rank={player.rank} size="w-6 h-6" />
             {player.rank}
           </span>
           {player.gender && (
