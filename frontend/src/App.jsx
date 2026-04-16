@@ -4,7 +4,9 @@
 
 import { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { AnimatePresence } from 'framer-motion';
 import useAuthStore from './context/authStore';
+import ServerWakeUp, { useServerStatus } from './components/ServerWakeUp';
 
 // Pages
 import LandingPage from './pages/LandingPage';
@@ -39,12 +41,17 @@ const PublicRoute = ({ children }) => {
 // ─── App ──────────────────────────────────────────────────────────────────────
 export default function App() {
   const { refreshUser, isAuthenticated } = useAuthStore();
+  const serverStatus = useServerStatus();
 
   useEffect(() => {
     if (isAuthenticated) refreshUser();
   }, []);
 
   return (
+    <>
+    <AnimatePresence>
+      {serverStatus === 'slow' && <ServerWakeUp />}
+    </AnimatePresence>
     <Routes>
       {/* Public routes */}
       <Route path="/" element={isAuthenticated ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
@@ -79,5 +86,6 @@ export default function App() {
 
       <Route path="*" element={<NotFoundPage />} />
     </Routes>
+    </>
   );
 }
