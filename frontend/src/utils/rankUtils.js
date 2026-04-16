@@ -108,7 +108,7 @@ const AGENT_UUIDS = {
  */
 export const getAgentIcon = (name) => {
   const uuid = AGENT_UUIDS[name];
-  return uuid ? `${CDN}/${uuid}/displayicon.png` : null;
+  return uuid ? `/agent-icons/${uuid}` : null;
 };
 
 /**
