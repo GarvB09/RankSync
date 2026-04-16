@@ -48,6 +48,13 @@ export default function DashboardPage() {
     try {
       await api.post(`/users/request/${userId}/accept`);
       toast.success('Duo request accepted! 🎮');
+      // Also consume 1 daily connect (same pool as sending requests)
+      const today = new Date().toDateString();
+      try {
+        const stored = JSON.parse(localStorage.getItem('playpair-likes') || '{}');
+        const count = (stored.date === today ? (stored.count || 0) : 0) + 1;
+        localStorage.setItem('playpair-likes', JSON.stringify({ date: today, count }));
+      } catch {}
       const { data } = await api.get('/users/connections');
       setConnections(data);
     } catch { toast.error('Failed to accept request'); }

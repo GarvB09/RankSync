@@ -1,20 +1,22 @@
 /** @type {import('tailwindcss').Config} */
 export default {
   content: ['./index.html', './src/**/*.{js,jsx,ts,tsx}'],
+  darkMode: 'class',
   theme: {
     extend: {
       colors: {
         pp: {
           orange: '#FF6B00',
           'orange-dark': '#E05E00',
-          'orange-light': '#FFF3E8',
-          bg: '#FAFAFA',
-          surface: '#FFFFFF',
-          border: '#E8E4DF',
-          'input-bg': '#F5F2EE',
-          'muted': '#6B6B6B',
-          'subtle': '#9E9E9E',
+          'orange-light': 'var(--pp-orange-light)',
+          bg: 'var(--pp-bg)',
+          surface: 'var(--pp-surface)',
+          border: 'var(--pp-border)',
+          'input-bg': 'var(--pp-input-bg)',
+          'muted': 'var(--pp-muted)',
+          'subtle': 'var(--pp-subtle)',
         },
+        valo: { red: '#FF4655' },
       },
       fontFamily: {
         hero: ['"Anton"', 'sans-serif'],

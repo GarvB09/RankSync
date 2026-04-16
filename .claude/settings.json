@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node backend/utils/migrateRegions.js)",
+      "Bash(node -e ':*)"
+    ]
+  }
+}

@@ -10,6 +10,8 @@ import {
   getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, formatLastSeen,
 } from '../utils/rankUtils';
 import RankIcon from '../components/RankIcon';
+import ProfileModal from '../components/ProfileModal';
+import useAuthStore from '../context/authStore';
 import toast from 'react-hot-toast';
 
 const DAILY_LIKE_LIMIT = 5;
@@ -200,7 +202,7 @@ function FistbumpOverlay({ onDone }) {
 }
 
 // ─── Player Card ──────────────────────────────────────────────────────────────
-function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpUsed, onLikeUsed, onFistbumpUsed, onPassed, onFistbumpAnim }) {
+function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpUsed, onLikeUsed, onFistbumpUsed, onPassed, onFistbumpAnim, onViewProfile }) {
   const [status, setStatus] = useState(player.connectionStatus || 'none');
   const [sending, setSending] = useState(false);
   const [anim, setAnim] = useState(null);
@@ -280,8 +282,8 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
           <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-green-400 to-transparent" />
         )}
 
-        {/* Avatar circle */}
-        <div className="relative">
+        {/* Avatar circle — click to view profile */}
+        <div className="relative cursor-pointer" onClick={() => onViewProfile(player.username)} title="View profile">
           {player.avatar ? (
             <img
               src={player.avatar}
@@ -298,6 +300,10 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
           {player.isOnline && (
             <span className="absolute bottom-1 right-1 w-4 h-4 rounded-full bg-green-500 border-2 border-white shadow-sm" />
           )}
+          {/* View profile hint */}
+          <div className="absolute inset-0 rounded-full bg-black/0 hover:bg-black/20 transition-colors flex items-center justify-center">
+            <span className="text-white text-xs font-semibold opacity-0 hover:opacity-100 transition-opacity">View</span>
+          </div>
         </div>
 
         {/* Rank + meta badges */}
@@ -323,7 +329,7 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
       <div className="p-4 flex flex-col gap-3 flex-1">
         <div>
           <div className="flex items-center gap-2 flex-wrap">
-            <h3 className="font-display font-bold text-gray-900 text-lg leading-tight">{player.username}</h3>
+            <h3 className="font-display font-bold text-gray-900 text-lg leading-tight cursor-pointer hover:text-pp-orange transition-colors" onClick={() => onViewProfile(player.username)}>{player.username}</h3>
             {!player.isOnline && <span className="text-xs text-gray-400">{formatLastSeen(player.lastSeen)}</span>}
             {player.trackerUrl && (
               <a
@@ -528,6 +534,7 @@ function FilterPanel({ filters, onChange, onReset }) {
 const DEFAULT_FILTERS = { region: '', rankMin: '', rankMax: '', role: '', playstyle: '', voiceChat: '', gender: '' };
 
 export default function FindDuoPage() {
+  const { user } = useAuthStore();
   const [players, setPlayers] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
@@ -537,6 +544,7 @@ export default function FindDuoPage() {
   const [likesUsed, setLikesUsed] = useState(() => getTodayLikes());
   const [fistbumpStatus, setFistbumpStatus] = useState(() => getFistbumpStatus());
   const [showFistbump, setShowFistbump] = useState(false);
+  const [viewingUsername, setViewingUsername] = useState(null);
 
   const likesLeft = DAILY_LIKE_LIMIT - likesUsed;
   const fistbumpUsed = fistbumpStatus.used;
@@ -596,6 +604,15 @@ export default function FindDuoPage() {
       <AnimatePresence>
         {showFistbump && <FistbumpOverlay onDone={() => setShowFistbump(false)} />}
       </AnimatePresence>
+
+      {/* Profile modal */}
+      <ProfileModal
+        username={viewingUsername}
+        onClose={() => setViewingUsername(null)}
+        currentUserId={user?._id}
+        connections={user?.connections}
+        sentRequests={user?.sentRequests}
+      />
 
       {/* Header */}
       <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
@@ -685,6 +702,7 @@ export default function FindDuoPage() {
                       onFistbumpUsed={handleFistbumpUsed}
                       onPassed={handlePassed}
                       onFistbumpAnim={() => setShowFistbump(true)}
+                      onViewProfile={setViewingUsername}
                     />
                   ))}
                 </div>
