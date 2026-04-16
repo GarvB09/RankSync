@@ -1,5 +1,5 @@
 /**
- * ProfileModal — full player profile in a slide-over panel
+ * ProfileModal — full player profile in a centered dialog
  */
 
 import { useEffect, useState } from 'react';
@@ -7,7 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import api, { API_URL } from '../utils/api';
 import {
-  getRankColorClass, getRankEmoji, getRankIcon,
+  getRankColorClass, getRankEmoji,
   getRoleIcon, getRegionFlagUrl, formatLastSeen, getAgentIcon,
 } from '../utils/rankUtils';
 import RankIcon from './RankIcon';
@@ -36,6 +36,13 @@ export default function ProfileModal({ username, onClose, currentUserId, connect
       .catch(() => toast.error('Could not load profile'))
       .finally(() => setLoading(false));
   }, [username]);
+
+  // Close on Escape
+  useEffect(() => {
+    const handler = (e) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [onClose]);
 
   const handleRequest = async () => {
     try {
@@ -71,221 +78,244 @@ export default function ProfileModal({ username, onClose, currentUserId, connect
             onClick={onClose}
           />
 
-          {/* Panel */}
-          <motion.div
-            initial={{ opacity: 0, x: 48, scale: 0.98 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            exit={{ opacity: 0, x: 48, scale: 0.97 }}
-            transition={{ type: 'spring', stiffness: 320, damping: 30 }}
-            className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-sm overflow-y-auto flex flex-col"
-            style={{ backgroundColor: 'var(--pp-surface)', borderLeft: '1px solid var(--pp-border)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-4 border-b sticky top-0 backdrop-blur-md z-10"
-                 style={{ borderColor: 'var(--pp-border)', backgroundColor: 'var(--pp-surface)' }}>
-              <span className="font-hero text-lg text-pp-orange tracking-wide">Player Profile</span>
-              <div className="flex items-center gap-2">
-                {profile && (
+          {/* Centered modal */}
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 pointer-events-none">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.92, y: 24 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.93, y: 16 }}
+              transition={{ type: 'spring', stiffness: 340, damping: 28 }}
+              className="pointer-events-auto w-full max-w-lg max-h-[90vh] flex flex-col rounded-3xl overflow-hidden"
+              style={{
+                backgroundColor: 'var(--pp-surface)',
+                border: '1px solid var(--pp-border)',
+                boxShadow: '0 32px 80px rgba(0,0,0,0.35), 0 8px 24px rgba(0,0,0,0.2)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {/* ── Sticky header ── */}
+              <div className="flex items-center justify-between px-6 py-4 border-b flex-shrink-0"
+                   style={{ borderColor: 'var(--pp-border)' }}>
+                <span className="font-hero text-xl text-pp-orange tracking-wide">Player Profile</span>
+                <div className="flex items-center gap-2">
+                  {profile && (
+                    <button
+                      onClick={() => { onClose(); navigate(`/profile/${profile.username}`); }}
+                      className="text-xs px-3 py-1.5 rounded-xl border font-medium transition-colors hover:border-pp-orange hover:text-pp-orange"
+                      style={{ borderColor: 'var(--pp-border)', color: 'var(--pp-muted)' }}
+                    >
+                      Full Profile →
+                    </button>
+                  )}
                   <button
-                    onClick={() => { onClose(); navigate(`/profile/${profile.username}`); }}
-                    className="text-xs px-3 py-1.5 rounded-xl border border-pp-border text-gray-500 hover:border-pp-orange hover:text-pp-orange transition-colors font-medium"
+                    onClick={onClose}
+                    className="w-8 h-8 rounded-xl flex items-center justify-center transition-colors hover:bg-pp-input-bg"
+                    style={{ color: 'var(--pp-muted)' }}
                   >
-                    Full Profile →
+                    ✕
                   </button>
-                )}
-                <button
-                  onClick={onClose}
-                  className="w-8 h-8 rounded-xl flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-pp-input-bg transition-colors"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-
-            {/* Body */}
-            {loading ? (
-              <div className="flex-1 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-3">
-                  <div className="w-8 h-8 border-2 border-pp-orange border-t-transparent rounded-full animate-spin" />
-                  <span className="text-sm text-gray-400">Loading profile...</span>
                 </div>
               </div>
-            ) : !profile ? (
-              <div className="flex-1 flex items-center justify-center text-center px-6">
-                <div>
-                  <div className="text-4xl mb-3">😔</div>
-                  <p className="text-gray-500">Profile not found</p>
-                </div>
-              </div>
-            ) : (
-              <div className="flex-1 p-5 space-y-5">
 
-                {/* Avatar + name */}
-                <div className="flex flex-col items-center text-center gap-3">
-                  {/* Avatar */}
-                  <div className="relative">
-                    <div className="w-24 h-24 rounded-full overflow-hidden border-4 border-pp-orange/30"
-                         style={{ boxShadow: '0 0 0 2px #FF6B0040' }}>
-                      {profile.avatar
-                        ? <img src={profile.avatar.startsWith('/uploads') ? `${API_URL}${profile.avatar}` : profile.avatar}
-                               alt="" className="w-full h-full object-cover" />
-                        : <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-pp-orange"
-                               style={{ backgroundColor: 'var(--pp-input-bg)' }}>
-                            {profile.username[0].toUpperCase()}
+              {/* ── Scrollable body ── */}
+              <div className="flex-1 overflow-y-auto">
+                {loading ? (
+                  <div className="flex items-center justify-center h-64">
+                    <div className="flex flex-col items-center gap-3">
+                      <div className="w-8 h-8 border-2 border-pp-orange border-t-transparent rounded-full animate-spin" />
+                      <span className="text-sm" style={{ color: 'var(--pp-muted)' }}>Loading profile...</span>
+                    </div>
+                  </div>
+                ) : !profile ? (
+                  <div className="flex items-center justify-center h-64 text-center px-6">
+                    <div>
+                      <div className="text-4xl mb-3">😔</div>
+                      <p style={{ color: 'var(--pp-muted)' }}>Profile not found</p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 space-y-5">
+
+                    {/* ── Avatar + identity ── */}
+                    <div className="flex items-center gap-5">
+                      {/* Avatar */}
+                      <div className="relative flex-shrink-0">
+                        <div className="w-24 h-24 rounded-2xl overflow-hidden border-2"
+                             style={{ borderColor: 'var(--pp-border)' }}>
+                          {profile.avatar
+                            ? <img src={profile.avatar.startsWith('/uploads') ? `${API_URL}${profile.avatar}` : profile.avatar}
+                                   alt="" className="w-full h-full object-cover" />
+                            : <div className="w-full h-full flex items-center justify-center text-4xl font-bold text-pp-orange"
+                                   style={{ backgroundColor: 'var(--pp-input-bg)' }}>
+                                {profile.username[0].toUpperCase()}
+                              </div>
+                          }
+                        </div>
+                        <span className={`absolute -bottom-1 -right-1 w-4 h-4 rounded-full border-2 ${profile.isOnline ? 'bg-green-500' : 'bg-gray-400'}`}
+                              style={{ borderColor: 'var(--pp-surface)' }} />
+                      </div>
+
+                      {/* Name + meta */}
+                      <div className="flex-1 min-w-0">
+                        <h2 className="font-display font-bold text-2xl truncate">{profile.username}</h2>
+                        {profile.riotId?.gameName && (
+                          <div className="text-xs font-mono mt-0.5" style={{ color: 'var(--pp-muted)' }}>
+                            {profile.riotId.gameName}#{profile.riotId.tagLine}
                           </div>
-                      }
-                    </div>
-                    <span className={`absolute bottom-1 right-1 w-4 h-4 rounded-full border-2 border-white ${profile.isOnline ? 'bg-green-500' : 'bg-gray-400'}`} />
-                  </div>
-
-                  <div>
-                    <h2 className="font-display font-bold text-xl" style={{ color: 'inherit' }}>{profile.username}</h2>
-                    {profile.riotId?.gameName && (
-                      <div className="text-xs font-mono mt-0.5" style={{ color: 'var(--pp-muted)' }}>
-                        {profile.riotId.gameName}#{profile.riotId.tagLine}
-                      </div>
-                    )}
-                    <div className="text-xs mt-1" style={{ color: 'var(--pp-subtle)' }}>
-                      {profile.isOnline ? <span className="text-green-500 font-medium">● Online</span> : `Last seen ${formatLastSeen(profile.lastSeen)}`}
-                    </div>
-                  </div>
-
-                  {/* Action buttons */}
-                  <div className="flex gap-2 w-full">
-                    {requestStatus === 'none' && (
-                      <button onClick={handleRequest} className="btn-primary flex-1 text-xs py-2">
-                        🎮 Send Request
-                      </button>
-                    )}
-                    {requestStatus === 'pending_sent' && (
-                      <div className="flex-1 text-center text-xs py-2 rounded-xl border font-medium"
-                           style={{ borderColor: 'var(--pp-border)', color: 'var(--pp-muted)' }}>
-                        ⏳ Pending
-                      </div>
-                    )}
-                    {requestStatus === 'connected' && (
-                      <button onClick={handleMessage} className="btn-primary flex-1 text-xs py-2">
-                        💬 Message
-                      </button>
-                    )}
-                    {profile.trackerUrl && (
-                      <a href={profile.trackerUrl} target="_blank" rel="noopener noreferrer"
-                         className="px-3 py-2 rounded-xl border border-orange-200 bg-pp-orange-light text-pp-orange text-xs font-semibold hover:bg-orange-100 transition-colors flex items-center">
-                        🔗
-                      </a>
-                    )}
-                  </div>
-                </div>
-
-                {/* Rank + region */}
-                <div className="rounded-2xl p-4 space-y-2" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--pp-muted)' }}>Rank</span>
-                    <span className={`font-mono font-bold flex items-center gap-1.5 ${getRankColorClass(profile.rank)}`}>
-                      <RankIcon rank={profile.rank} size="w-5 h-5" />
-                      {profile.rank || 'Unranked'}
-                    </span>
-                  </div>
-                  {profile.region && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--pp-muted)' }}>Region</span>
-                      <span className="text-sm flex items-center gap-1.5" style={{ color: 'inherit' }}>
-                        {getRegionFlagUrl(profile.region) && (
-                          <img src={getRegionFlagUrl(profile.region)} alt="" className="w-5 h-3.5 object-cover rounded-sm" />
                         )}
-                        {profile.region}
-                      </span>
-                    </div>
-                  )}
-                  {vcLabel && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--pp-muted)' }}>Voice</span>
-                      <span className="text-sm" style={{ color: 'inherit' }}>{vcLabel}</span>
-                    </div>
-                  )}
-                  {profile.age && (
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--pp-muted)' }}>Age</span>
-                      <span className="text-sm" style={{ color: 'inherit' }}>{profile.age}</span>
-                    </div>
-                  )}
-                </div>
+                        <div className="text-xs mt-1">
+                          {profile.isOnline
+                            ? <span className="text-green-500 font-semibold">● Online</span>
+                            : <span style={{ color: 'var(--pp-subtle)' }}>Last seen {formatLastSeen(profile.lastSeen)}</span>
+                          }
+                        </div>
 
-                {/* Bio */}
-                {profile.bio && (
-                  <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
-                    <div className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--pp-muted)' }}>About</div>
-                    <p className="text-sm leading-relaxed" style={{ color: 'inherit' }}>{profile.bio}</p>
-                  </div>
-                )}
+                        {/* Rank inline */}
+                        <div className={`mt-2 flex items-center gap-1.5 font-mono font-bold text-base ${getRankColorClass(profile.rank)}`}>
+                          <RankIcon rank={profile.rank} size="w-7 h-7" />
+                          {profile.rank || 'Unranked'}
+                        </div>
+                      </div>
+                    </div>
 
-                {/* Roles + playstyle */}
-                {(profile.roles?.length > 0 || profile.playstyleTags?.length > 0) && (
-                  <div className="rounded-2xl p-4 space-y-3" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
-                    <div className="text-xs font-semibold uppercase tracking-wider" style={{ color: 'var(--pp-muted)' }}>Playstyle</div>
-                    {profile.roles?.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {profile.roles.map((r) => (
-                          <span key={r} className="text-xs px-2.5 py-1 rounded-full border font-medium"
-                                style={{ borderColor: 'var(--pp-border)', color: 'inherit', backgroundColor: 'var(--pp-surface)' }}>
-                            {getRoleIcon(r)} {r}
-                          </span>
-                        ))}
+                    {/* ── Action buttons ── */}
+                    <div className="flex gap-2">
+                      {requestStatus === 'none' && (
+                        <button onClick={handleRequest} className="btn-primary flex-1 text-sm py-2.5">
+                          🎮 Send Request
+                        </button>
+                      )}
+                      {requestStatus === 'pending_sent' && (
+                        <div className="flex-1 text-center text-sm py-2.5 rounded-xl border font-medium"
+                             style={{ borderColor: 'var(--pp-border)', color: 'var(--pp-muted)' }}>
+                          ⏳ Request Pending
+                        </div>
+                      )}
+                      {requestStatus === 'connected' && (
+                        <button onClick={handleMessage} className="btn-primary flex-1 text-sm py-2.5">
+                          💬 Message
+                        </button>
+                      )}
+                      {profile.trackerUrl && (
+                        <a href={profile.trackerUrl} target="_blank" rel="noopener noreferrer"
+                           className="px-4 py-2.5 rounded-xl border border-orange-200 bg-pp-orange-light text-pp-orange text-sm font-semibold hover:bg-orange-100 transition-colors flex items-center gap-1.5">
+                          🔗 Verify
+                        </a>
+                      )}
+                    </div>
+
+                    {/* ── Info grid ── */}
+                    <div className="grid grid-cols-2 gap-3">
+                      {profile.region && (
+                        <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
+                          <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--pp-muted)' }}>Region</div>
+                          <div className="flex items-center gap-1.5 text-sm font-medium">
+                            {getRegionFlagUrl(profile.region) && (
+                              <img src={getRegionFlagUrl(profile.region)} alt="" className="w-5 h-3.5 object-cover rounded-sm" />
+                            )}
+                            {profile.region}
+                          </div>
+                        </div>
+                      )}
+                      {vcLabel && (
+                        <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
+                          <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--pp-muted)' }}>Voice Chat</div>
+                          <div className="text-sm font-medium">{vcLabel}</div>
+                        </div>
+                      )}
+                      {profile.age && (
+                        <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
+                          <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--pp-muted)' }}>Age</div>
+                          <div className="text-sm font-medium">{profile.age}</div>
+                        </div>
+                      )}
+                      {profile.gender && (
+                        <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
+                          <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--pp-muted)' }}>Gender</div>
+                          <div className="text-sm font-medium">{profile.gender}</div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* ── Bio ── */}
+                    {profile.bio && (
+                      <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider mb-2" style={{ color: 'var(--pp-muted)' }}>About</div>
+                        <p className="text-sm leading-relaxed">{profile.bio}</p>
                       </div>
                     )}
-                    {profile.playstyleTags?.length > 0 && (
-                      <div className="flex flex-wrap gap-1.5">
-                        {profile.playstyleTags.map((tag) => (
-                          <span key={tag} className="text-xs px-2.5 py-1 rounded-full border border-orange-200 bg-pp-orange-light text-pp-orange font-medium">
-                            {tag}
-                          </span>
-                        ))}
+
+                    {/* ── Roles + playstyle ── */}
+                    {(profile.roles?.length > 0 || profile.playstyleTags?.length > 0) && (
+                      <div className="rounded-2xl p-4 space-y-3" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--pp-muted)' }}>Playstyle</div>
+                        {profile.roles?.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {profile.roles.map((r) => (
+                              <span key={r} className="text-xs px-3 py-1.5 rounded-full border font-medium"
+                                    style={{ borderColor: 'var(--pp-border)', backgroundColor: 'var(--pp-surface)' }}>
+                                {getRoleIcon(r)} {r}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {profile.playstyleTags?.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {profile.playstyleTags.map((tag) => (
+                              <span key={tag} className="text-xs px-3 py-1.5 rounded-full border border-orange-200 bg-pp-orange-light text-pp-orange font-medium">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
-                  </div>
-                )}
 
-                {/* Favorite agents */}
-                {profile.favoriteAgents?.length > 0 && (
-                  <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
-                    <div className="text-xs font-semibold uppercase tracking-wider mb-3" style={{ color: 'var(--pp-muted)' }}>Fav Agents</div>
-                    <div className="flex flex-wrap gap-2">
-                      {profile.favoriteAgents.map((agent) => {
-                        const icon = getAgentIcon(agent);
-                        return (
-                          <span key={agent} className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-sm font-medium"
-                                style={{ borderColor: 'var(--pp-border)', color: 'inherit', backgroundColor: 'var(--pp-surface)' }}>
-                            {icon
-                              ? <img src={icon} alt={agent} className="w-4 h-4 rounded-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
-                              : <span>🦸</span>
-                            }
-                            {agent}
+                    {/* ── Favorite agents ── */}
+                    {profile.favoriteAgents?.length > 0 && (
+                      <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--pp-muted)' }}>Favourite Agents</div>
+                        <div className="flex flex-wrap gap-2">
+                          {profile.favoriteAgents.map((agent) => {
+                            const icon = getAgentIcon(agent);
+                            return (
+                              <span key={agent} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-sm font-medium"
+                                    style={{ borderColor: 'var(--pp-border)', backgroundColor: 'var(--pp-surface)' }}>
+                                {icon
+                                  ? <img src={icon} alt={agent} className="w-5 h-5 rounded-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                                  : <span>🦸</span>
+                                }
+                                {agent}
+                              </span>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Looking for ── */}
+                    {profile.preferredRankMin && (
+                      <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--pp-muted)' }}>Looking For</div>
+                        <div className="flex items-center gap-3">
+                          <span className={`font-mono font-bold text-sm flex items-center gap-1.5 ${getRankColorClass(profile.preferredRankMin)}`}>
+                            <RankIcon rank={profile.preferredRankMin} size="w-6 h-6" />
+                            {profile.preferredRankMin}
                           </span>
-                        );
-                      })}
-                    </div>
-                  </div>
-                )}
+                          <span style={{ color: 'var(--pp-border)' }}>—</span>
+                          <span className={`font-mono font-bold text-sm flex items-center gap-1.5 ${getRankColorClass(profile.preferredRankMax)}`}>
+                            <RankIcon rank={profile.preferredRankMax} size="w-6 h-6" />
+                            {profile.preferredRankMax}
+                          </span>
+                        </div>
+                      </div>
+                    )}
 
-                {/* Looking for */}
-                {profile.preferredRankMin && (
-                  <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
-                    <div className="text-xs font-semibold uppercase tracking-wider mb-2" style={{ color: 'var(--pp-muted)' }}>Looking For</div>
-                    <div className="flex items-center gap-3">
-                      <span className={`font-mono font-semibold text-sm ${getRankColorClass(profile.preferredRankMin)}`}>
-                        {getRankEmoji(profile.preferredRankMin)} {profile.preferredRankMin}
-                      </span>
-                      <span style={{ color: 'var(--pp-border)' }}>—</span>
-                      <span className={`font-mono font-semibold text-sm ${getRankColorClass(profile.preferredRankMax)}`}>
-                        {getRankEmoji(profile.preferredRankMax)} {profile.preferredRankMax}
-                      </span>
-                    </div>
                   </div>
                 )}
               </div>
-            )}
-          </motion.div>
+            </motion.div>
+          </div>
         </>
       )}
     </AnimatePresence>
