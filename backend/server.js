@@ -24,6 +24,7 @@ const matchRoutes = require('./routes/matches');
 const chatRoutes = require('./routes/chat');
 const riotRoutes = require('./routes/riot');
 const notificationRoutes = require('./routes/notifications');
+const feedbackRoutes = require('./routes/feedback');
 const { initializeSocket } = require('./socket/socketManager');
 const errorHandler = require('./middleware/errorHandler');
 
@@ -117,6 +118,7 @@ app.use('/api/matches', matchRoutes);
 app.use('/api/chat', chatRoutes);
 app.use('/api/riot', riotRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/feedback', feedbackRoutes);
 
 // Root + Health check
 app.get('/', (_req, res) => {

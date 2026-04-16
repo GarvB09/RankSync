@@ -10,8 +10,11 @@ import { useSocket } from '../../hooks/useSocket';
 import { useDarkMode } from '../../hooks/useDarkMode';
 import { getRankColorClass } from '../../utils/rankUtils';
 import RankIcon from '../RankIcon';
+import FeedbackButton from '../FeedbackButton';
 import api, { API_URL } from '../../utils/api';
 import toast from 'react-hot-toast';
+
+const ADMIN_EMAIL = 'garv.b2005@gmail.com';
 
 const NAV_ITEMS = [
   { to: '/dashboard',     icon: '⚡', label: 'Dashboard' },
@@ -46,6 +49,8 @@ export default function AppLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [dark, setDark] = useDarkMode();
   const { on } = useSocket();
+
+  const isAdmin = user?.email === ADMIN_EMAIL;
 
   useEffect(() => {
     api.get('/notifications').then(({ data }) => {
@@ -157,10 +162,49 @@ export default function AppLayout() {
               )}
             </NavLink>
           ))}
+
+          {/* Admin-only: Feedback inbox */}
+          {isAdmin && (
+            <NavLink
+              to="/admin/feedback"
+              onClick={() => setSidebarOpen(false)}
+              className={({ isActive }) => `
+                flex items-center gap-3 px-4 py-2.5 rounded-xl
+                font-display font-semibold text-sm tracking-wide uppercase
+                transition-all duration-150
+                ${isActive
+                  ? 'bg-pp-orange text-white shadow-sm'
+                  : dark
+                    ? 'text-gray-400 hover:text-gray-100 hover:bg-white/5'
+                    : 'text-gray-500 hover:text-gray-900 hover:bg-pp-input-bg'
+                }
+              `}
+            >
+              <span className="text-base">📬</span>
+              <span>Feedback</span>
+            </NavLink>
+          )}
         </nav>
 
-        {/* Logout */}
-        <div className="p-3 border-t" style={{ borderColor: 'var(--pp-border)' }}>
+        {/* Bottom section: Twitter link + Logout */}
+        <div className="p-3 border-t space-y-1" style={{ borderColor: 'var(--pp-border)' }}>
+          {/* Connect with me */}
+          <a
+            href="https://x.com/Killua14025263"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm font-display font-semibold uppercase tracking-wide"
+            style={{ color: 'var(--pp-muted)' }}
+            onMouseEnter={e => { e.currentTarget.style.color = '#1DA1F2'; e.currentTarget.style.backgroundColor = 'rgba(29,161,242,0.08)'; }}
+            onMouseLeave={e => { e.currentTarget.style.color = 'var(--pp-muted)'; e.currentTarget.style.backgroundColor = ''; }}
+          >
+            <svg className="w-4 h-4 flex-shrink-0" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.253 5.622zm-1.161 17.52h1.833L7.084 4.126H5.117z"/>
+            </svg>
+            <span>Connect with me</span>
+          </a>
+
+          {/* Sign out */}
           <button
             onClick={handleLogout}
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-gray-400 hover:text-pp-orange hover:bg-pp-orange-light transition-colors text-sm font-display font-semibold uppercase tracking-wide"
@@ -198,6 +242,9 @@ export default function AppLayout() {
           </div>
         </main>
       </div>
+
+      {/* Floating feedback button — all users */}
+      <FeedbackButton />
     </div>
   );
 }

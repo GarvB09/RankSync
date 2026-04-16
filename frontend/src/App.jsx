@@ -21,6 +21,7 @@ import EditProfilePage from './pages/EditProfilePage';
 import ChatPage from './pages/ChatPage';
 import NotificationsPage from './pages/NotificationsPage';
 import NotFoundPage from './pages/NotFoundPage';
+import AdminFeedbackPage from './pages/AdminFeedbackPage';
 
 // Layout
 import AppLayout from './components/layout/AppLayout';
@@ -82,6 +83,7 @@ export default function App() {
         <Route path="chat" element={<ChatPage />} />
         <Route path="chat/:conversationId" element={<ChatPage />} />
         <Route path="notifications" element={<NotificationsPage />} />
+        <Route path="admin/feedback" element={<AdminFeedbackPage />} />
       </Route>
 
       <Route path="*" element={<NotFoundPage />} />
