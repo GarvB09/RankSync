@@ -81,6 +81,7 @@ exports.findDuo = async (req, res, next) => {
     const filter = {
       _id: { $ne: req.user.id },           // Exclude self
       isProfileComplete: true,
+      isHidden: { $ne: true },             // Exclude hidden/demo accounts
       // Exclude already-connected or pending
       connections: { $nin: [req.user.id] },
     };

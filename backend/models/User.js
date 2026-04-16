@@ -167,6 +167,7 @@ const userSchema = new mongoose.Schema(
     lastSeen: { type: Date, default: Date.now },
     isProfileComplete: { type: Boolean, default: false },
     needsUsername: { type: Boolean, default: false }, // true for new Google users until they choose a username
+    isHidden: { type: Boolean, default: false }, // hidden from Find Duo (e.g. guest/demo accounts)
 
     // Connections
     sentRequests: [{
