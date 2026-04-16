@@ -204,12 +204,14 @@ export default function ProfilePage() {
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card p-6">
           <h2 className="font-display font-bold text-base text-gray-900 mb-3">LOOKING FOR</h2>
           <div className="flex items-center gap-3">
-            <span className={`font-mono font-semibold text-sm ${getRankColorClass(profile.preferredRankMin)}`}>
-              {getRankEmoji(profile.preferredRankMin)} {profile.preferredRankMin}
+            <span className={`font-mono font-semibold text-sm flex items-center gap-1.5 ${getRankColorClass(profile.preferredRankMin)}`}>
+              <RankIcon rank={profile.preferredRankMin} size="w-6 h-6" />
+              {profile.preferredRankMin}
             </span>
             <span className="text-gray-300">—</span>
-            <span className={`font-mono font-semibold text-sm ${getRankColorClass(profile.preferredRankMax)}`}>
-              {getRankEmoji(profile.preferredRankMax)} {profile.preferredRankMax}
+            <span className={`font-mono font-semibold text-sm flex items-center gap-1.5 ${getRankColorClass(profile.preferredRankMax)}`}>
+              <RankIcon rank={profile.preferredRankMax} size="w-6 h-6" />
+              {profile.preferredRankMax}
             </span>
           </div>
         </motion.div>
