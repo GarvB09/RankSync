@@ -190,7 +190,7 @@ export default function AppLayout() {
         <div className="p-3 border-t space-y-1" style={{ borderColor: 'var(--pp-border)' }}>
           {/* Connect with me */}
           <a
-            href="https://x.com/Killua14025263"
+            href="https://x.com/Garvxxxb"
             target="_blank"
             rel="noopener noreferrer"
             className="w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-colors text-sm font-display font-semibold uppercase tracking-wide"
