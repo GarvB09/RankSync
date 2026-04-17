@@ -37,7 +37,10 @@ function Avatar({ user, size = 10, showOnline = false }) {
   const src = avatarSrc(user?.avatar);
   return (
     <div className="relative flex-shrink-0">
-      <div className={`w-${size} h-${size} rounded-full bg-gradient-to-br from-pp-orange/20 to-pp-orange/5 border-2 border-white shadow-sm flex items-center justify-center overflow-hidden`}>
+      <div
+        className={`w-${size} h-${size} rounded-full bg-gradient-to-br from-pp-orange/20 to-pp-orange/5 border-2 shadow-sm flex items-center justify-center overflow-hidden`}
+        style={{ borderColor: 'var(--pp-surface)' }}
+      >
         {src
           ? <img src={src} alt="" className="w-full h-full object-cover" />
           : <span className="font-bold text-pp-orange" style={{ fontSize: size * 3.5 + 'px' }}>
@@ -46,7 +49,10 @@ function Avatar({ user, size = 10, showOnline = false }) {
         }
       </div>
       {showOnline && (
-        <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${user?.isOnline ? 'bg-green-400' : 'bg-gray-300'}`} />
+        <span
+          className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 ${user?.isOnline ? 'bg-green-400' : 'bg-gray-300 dark:bg-gray-600'}`}
+          style={{ borderColor: 'var(--pp-surface)' }}
+        />
       )}
     </div>
   );
@@ -69,14 +75,20 @@ function MessageBubble({ message, isOwn, showAvatar }) {
       </div>
 
       <div className={`flex flex-col gap-1 max-w-xs lg:max-w-md ${isOwn ? 'items-end' : 'items-start'}`}>
-        <div className={`px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
-          isOwn
-            ? 'bg-gradient-to-br from-pp-orange to-orange-600 text-white rounded-2xl rounded-br-md'
-            : 'bg-white text-gray-800 border border-gray-100 rounded-2xl rounded-bl-md shadow-sm'
-        }`}>
+        <div
+          className={`px-4 py-2.5 text-sm leading-relaxed shadow-sm ${
+            isOwn
+              ? 'bg-gradient-to-br from-pp-orange to-orange-600 text-white rounded-2xl rounded-br-md'
+              : 'text-gray-800 border rounded-2xl rounded-bl-md'
+          }`}
+          style={isOwn ? undefined : {
+            backgroundColor: 'var(--pp-surface)',
+            borderColor: 'var(--pp-border)',
+          }}
+        >
           {message.content}
         </div>
-        <span className="text-[10px] text-gray-400 px-1">
+        <span className="text-[10px] px-1" style={{ color: 'var(--pp-subtle)' }}>
           {formatTime(message.createdAt)}
           {isOwn && message.optimistic && <span className="ml-1 opacity-60">·</span>}
         </span>
@@ -95,11 +107,14 @@ function TypingIndicator({ partner }) {
       className="flex items-end gap-2"
     >
       <Avatar user={partner} size={7} />
-      <div className="bg-white border border-gray-100 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm flex items-center gap-1">
+      <div
+        className="border rounded-2xl rounded-bl-md px-4 py-3 shadow-sm flex items-center gap-1"
+        style={{ backgroundColor: 'var(--pp-surface)', borderColor: 'var(--pp-border)' }}
+      >
         {[0, 1, 2].map((i) => (
           <motion.div
             key={i}
-            className="w-1.5 h-1.5 rounded-full bg-gray-400"
+            className="w-1.5 h-1.5 rounded-full bg-gray-400 dark:bg-gray-500"
             animate={{ y: [0, -4, 0] }}
             transition={{ duration: 0.6, repeat: Infinity, delay: i * 0.15 }}
           />
@@ -117,10 +132,10 @@ function ConversationItem({ conv, isActive, onClick, currentUserId }) {
   return (
     <button
       onClick={onClick}
-      className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all text-left group ${
+      className={`w-full flex items-center gap-3 px-3 py-3 rounded-2xl transition-all text-left group border ${
         isActive
-          ? 'bg-gradient-to-r from-pp-orange/15 to-orange-50 border border-orange-200/60'
-          : 'hover:bg-gray-50 border border-transparent'
+          ? 'bg-gradient-to-r from-pp-orange/15 to-pp-orange/5 border-pp-orange/30'
+          : 'hover:bg-gray-50 border-transparent'
       }`}
     >
       <Avatar user={other} size={11} showOnline />
@@ -129,12 +144,12 @@ function ConversationItem({ conv, isActive, onClick, currentUserId }) {
           <span className={`font-semibold text-sm truncate ${isActive ? 'text-pp-orange' : 'text-gray-900'}`}>
             {other?.username}
           </span>
-          <span className="text-[10px] text-gray-400 flex-shrink-0">
+          <span className="text-[10px] flex-shrink-0" style={{ color: 'var(--pp-subtle)' }}>
             {formatConvTime(lastMsg?.createdAt)}
           </span>
         </div>
         <div className="flex items-center justify-between gap-1 mt-0.5">
-          <span className="text-xs text-gray-400 truncate">
+          <span className="text-xs truncate" style={{ color: 'var(--pp-subtle)' }}>
             {lastMsg?.content || 'Say hello! 👋'}
           </span>
           {conv.unreadCount > 0 && (
@@ -162,9 +177,9 @@ function DateDivider({ date }) {
 
   return (
     <div className="flex items-center gap-3 py-2">
-      <div className="flex-1 h-px bg-gray-100" />
-      <span className="text-[10px] text-gray-400 font-medium uppercase tracking-wider px-2">{label}</span>
-      <div className="flex-1 h-px bg-gray-100" />
+      <div className="flex-1 h-px" style={{ backgroundColor: 'var(--pp-border)' }} />
+      <span className="text-[10px] font-medium uppercase tracking-wider px-2" style={{ color: 'var(--pp-subtle)' }}>{label}</span>
+      <div className="flex-1 h-px" style={{ backgroundColor: 'var(--pp-border)' }} />
     </div>
   );
 }
@@ -317,18 +332,25 @@ export default function ChatPage() {
   const grouped = groupMessages(messages);
 
   return (
-    <div className="flex overflow-hidden" style={{ height: 'calc(100vh - 56px)' }}>
+    <div
+      className="flex overflow-hidden"
+      style={{ height: 'calc(100vh - 56px)', backgroundColor: 'var(--pp-bg)' }}
+    >
 
       {/* ── Conversation sidebar ───────────────────────────────── */}
-      <aside className={`
-        flex-shrink-0 flex flex-col
-        border-r border-gray-100 bg-white/90 backdrop-blur-md
-        ${activeConvId ? 'hidden sm:flex w-72' : 'flex w-full sm:w-72'}
-      `}>
+      <aside
+        className={`
+          flex-shrink-0 flex flex-col border-r backdrop-blur-md
+          ${activeConvId ? 'hidden sm:flex w-72' : 'flex w-full sm:w-72'}
+        `}
+        style={{ backgroundColor: 'var(--pp-surface)', borderColor: 'var(--pp-border)' }}
+      >
         {/* Sidebar header */}
-        <div className="px-5 py-4 border-b border-gray-100">
+        <div className="px-5 py-4 border-b" style={{ borderColor: 'var(--pp-border)' }}>
           <h2 className="font-hero text-lg text-gray-900 tracking-wide">Messages</h2>
-          <p className="text-xs text-gray-400 mt-0.5">{conversations.length} conversation{conversations.length !== 1 ? 's' : ''}</p>
+          <p className="text-xs mt-0.5" style={{ color: 'var(--pp-subtle)' }}>
+            {conversations.length} conversation{conversations.length !== 1 ? 's' : ''}
+          </p>
         </div>
 
         {/* List */}
@@ -336,18 +358,21 @@ export default function ChatPage() {
           {loadingConvs ? (
             Array.from({ length: 4 }).map((_, i) => (
               <div key={i} className="flex items-center gap-3 px-3 py-3 animate-pulse">
-                <div className="w-11 h-11 rounded-full bg-gray-100 flex-shrink-0" />
+                <div className="w-11 h-11 rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--pp-input-bg)' }} />
                 <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-gray-100 rounded-full w-2/3" />
-                  <div className="h-3 bg-gray-100 rounded-full w-1/2" />
+                  <div className="h-3 rounded-full w-2/3" style={{ backgroundColor: 'var(--pp-input-bg)' }} />
+                  <div className="h-3 rounded-full w-1/2" style={{ backgroundColor: 'var(--pp-input-bg)' }} />
                 </div>
               </div>
             ))
           ) : conversations.length === 0 ? (
             <div className="text-center py-16 px-6">
-              <div className="w-16 h-16 rounded-2xl bg-pp-orange-light flex items-center justify-center text-3xl mx-auto mb-4">💬</div>
+              <div
+                className="w-16 h-16 rounded-2xl flex items-center justify-center text-3xl mx-auto mb-4"
+                style={{ backgroundColor: 'var(--pp-orange-light)' }}
+              >💬</div>
               <p className="font-semibold text-gray-700 text-sm">No conversations yet</p>
-              <p className="text-gray-400 text-xs mt-1">Connect with players to start chatting!</p>
+              <p className="text-xs mt-1" style={{ color: 'var(--pp-subtle)' }}>Connect with players to start chatting!</p>
             </div>
           ) : (
             conversations.map((conv) => (
@@ -365,11 +390,20 @@ export default function ChatPage() {
 
       {/* ── Chat window ───────────────────────────────────────── */}
       {activeConvId ? (
-        <div className="flex-1 flex flex-col min-w-0" style={{ background: 'linear-gradient(160deg, #fdf6f0 0%, #f8f9fb 60%, #f0f4ff 100%)' }}>
+        <div
+          className="flex-1 flex flex-col min-w-0"
+          style={{ backgroundColor: 'var(--pp-bg)' }}
+        >
 
           {/* Chat header */}
-          <div className="flex items-center gap-3 px-4 py-3 border-b border-white/60 bg-white/80 backdrop-blur-md flex-shrink-0"
-               style={{ boxShadow: '0 1px 12px rgba(0,0,0,0.06)' }}>
+          <div
+            className="flex items-center gap-3 px-4 py-3 border-b backdrop-blur-md flex-shrink-0"
+            style={{
+              backgroundColor: 'var(--pp-surface)',
+              borderColor: 'var(--pp-border)',
+              boxShadow: '0 1px 12px rgba(0,0,0,0.04)',
+            }}
+          >
             <button
               onClick={() => { setActiveConvId(null); navigate('/chat'); }}
               className="sm:hidden text-gray-400 hover:text-gray-700 p-1.5 rounded-xl hover:bg-gray-100 transition-colors mr-1"
@@ -424,12 +458,15 @@ export default function ChatPage() {
               </div>
             ) : messages.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-full text-center gap-3">
-                <div className="w-20 h-20 rounded-3xl bg-white shadow-md flex items-center justify-center text-4xl border border-gray-100">
+                <div
+                  className="w-20 h-20 rounded-3xl shadow-md flex items-center justify-center text-4xl border"
+                  style={{ backgroundColor: 'var(--pp-surface)', borderColor: 'var(--pp-border)' }}
+                >
                   👋
                 </div>
                 <div>
                   <p className="font-semibold text-gray-700 text-sm">Say hello to {partner?.username}!</p>
-                  <p className="text-gray-400 text-xs mt-1">Good luck out there, duo 🎮</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--pp-subtle)' }}>Good luck out there, duo 🎮</p>
                 </div>
               </div>
             ) : (
@@ -455,9 +492,18 @@ export default function ChatPage() {
           </div>
 
           {/* Input bar */}
-          <div className="flex-shrink-0 px-4 py-3 border-t border-white/60 bg-white/80 backdrop-blur-md">
-            <div className="flex items-end gap-2 bg-white rounded-2xl border border-gray-200 shadow-sm px-4 py-2"
-                 style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+          <div
+            className="flex-shrink-0 px-4 py-3 border-t backdrop-blur-md"
+            style={{ backgroundColor: 'var(--pp-surface)', borderColor: 'var(--pp-border)' }}
+          >
+            <div
+              className="flex items-end gap-2 rounded-2xl border shadow-sm px-4 py-2"
+              style={{
+                backgroundColor: 'var(--pp-input-bg)',
+                borderColor: 'var(--pp-border)',
+                boxShadow: '0 2px 12px rgba(0,0,0,0.04)',
+              }}
+            >
               <textarea
                 ref={textareaRef}
                 rows={1}
@@ -465,7 +511,8 @@ export default function ChatPage() {
                 onChange={handleInputChange}
                 onKeyDown={handleKeyDown}
                 placeholder={`Message ${partner?.username || ''}…`}
-                className="flex-1 resize-none bg-transparent outline-none text-sm text-gray-800 placeholder-gray-400 py-1.5 min-h-[28px] max-h-28"
+                className="flex-1 resize-none bg-transparent outline-none text-sm text-gray-800 py-1.5 min-h-[28px] max-h-28"
+                style={{ color: 'inherit' }}
               />
               <button
                 onClick={handleSend}
@@ -485,23 +532,28 @@ export default function ChatPage() {
                 )}
               </button>
             </div>
-            <p className="text-[10px] text-gray-400 text-center mt-1.5">Enter to send · Shift+Enter for new line</p>
+            <p className="text-[10px] text-center mt-1.5" style={{ color: 'var(--pp-subtle)' }}>
+              Enter to send · Shift+Enter for new line
+            </p>
           </div>
         </div>
       ) : (
         /* No conversation selected */
-        <div className="flex-1 hidden sm:flex items-center justify-center"
-             style={{ background: 'linear-gradient(160deg, #fdf6f0 0%, #f8f9fb 60%, #f0f4ff 100%)' }}>
+        <div
+          className="flex-1 hidden sm:flex items-center justify-center"
+          style={{ backgroundColor: 'var(--pp-bg)' }}
+        >
           <div className="text-center">
             <motion.div
               animate={{ y: [0, -8, 0] }}
               transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
-              className="w-24 h-24 rounded-3xl bg-white shadow-lg flex items-center justify-center text-5xl mx-auto mb-6 border border-gray-100"
+              className="w-24 h-24 rounded-3xl shadow-lg flex items-center justify-center text-5xl mx-auto mb-6 border"
+              style={{ backgroundColor: 'var(--pp-surface)', borderColor: 'var(--pp-border)' }}
             >
               💬
             </motion.div>
             <h3 className="font-hero text-xl text-gray-800 mb-2 tracking-wide">Your Messages</h3>
-            <p className="text-gray-400 text-sm">Select a conversation to start chatting</p>
+            <p className="text-sm" style={{ color: 'var(--pp-subtle)' }}>Select a conversation to start chatting</p>
           </div>
         </div>
       )}
