@@ -6,7 +6,11 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../context/authStore';
 import api, { API_URL } from '../utils/api';
-import { RANKS, REGIONS, REGION_FLAGS, ROLES, PLAYSTYLES, AGENTS, getRankColorClass, getRankEmoji, getAgentIcon } from '../utils/rankUtils';
+import {
+  RANKS, REGIONS, REGION_FLAGS, ROLES, PLAYSTYLES, AGENTS, getRankColorClass, getRankEmoji, getAgentIcon,
+  LOL_RANKS, LOL_REGIONS, LOL_REGION_NAMES, LOL_LANES, LOL_CHAMPIONS,
+  getLolChampionIcon, getLolChampionDisplay, getLolLaneIcon,
+} from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
 const VOICE_OPTIONS = [
@@ -25,6 +29,8 @@ export default function EditProfilePage() {
     roles: [], playstyleTags: [], voiceChatPreference: 'preferred',
     preferredRankMin: 'Silver 1', preferredRankMax: 'Gold 3', favoriteAgents: [],
     trackerUrl: '',
+    game: 'valorant',
+    lolRank: '', lolRegion: '', lolLanes: [], favoriteChampions: [],
   });
 
   const [newUsername, setNewUsername] = useState('');
@@ -50,6 +56,11 @@ export default function EditProfilePage() {
         preferredRankMax: user.preferredRankMax || 'Gold 3',
         favoriteAgents: user.favoriteAgents || [],
         trackerUrl: user.trackerUrl || '',
+        game: user.game || 'valorant',
+        lolRank: user.lolRank || '',
+        lolRegion: user.lolRegion || '',
+        lolLanes: user.lolLanes || [],
+        favoriteChampions: user.favoriteChampions || [],
       });
       if (user.riotId?.gameName) setRiotInput(`${user.riotId.gameName}#${user.riotId.tagLine || ''}`);
     }
@@ -175,6 +186,34 @@ export default function EditProfilePage() {
 
       <form onSubmit={handleSave} className="space-y-5">
 
+        {/* Game Switcher */}
+        <section className="card p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="text-sm font-display font-bold text-gray-700 uppercase tracking-wider">Primary Game</span>
+          </div>
+          <div className="flex items-center gap-2 p-1 bg-pp-input-bg rounded-xl border border-pp-border w-fit">
+            <button
+              type="button"
+              onClick={() => setForm((p) => ({ ...p, game: 'valorant' }))}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold uppercase tracking-wide transition-all ${
+                form.game === 'valorant' ? 'bg-pp-orange text-white shadow-sm' : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              🎯 Valorant
+            </button>
+            <button
+              type="button"
+              onClick={() => setForm((p) => ({ ...p, game: 'lol' }))}
+              className={`flex items-center gap-2 px-5 py-2.5 rounded-lg text-sm font-bold uppercase tracking-wide transition-all ${
+                form.game === 'lol' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              ⚔️ League of Legends
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-2">This determines which lobby you appear in when others search for a duo.</p>
+        </section>
+
         {/* Username */}
         <section className="card p-6 space-y-4">
           <SectionHeader icon="👤" title="Username" />
@@ -231,8 +270,8 @@ export default function EditProfilePage() {
           </div>
         </section>
 
-        {/* Riot Account */}
-        <section className="card p-6 space-y-4">
+        {/* Riot Account (Valorant only) */}
+        {form.game === 'valorant' && <section className="card p-6 space-y-4">
           <SectionHeader icon="🎮" title="Riot Account" />
 
           {user?.riotId?.gameName && !changingRiot ? (
@@ -301,7 +340,78 @@ export default function EditProfilePage() {
               {REGIONS.map((r) => <option key={r} value={r}>{REGION_FLAGS[r]} {r}</option>)}
             </select>
           </div>
-        </section>
+        </section>}
+
+        {/* League of Legends Account */}
+        {form.game === 'lol' && (
+          <section className="card p-6 space-y-4">
+            <SectionHeader icon="⚔️" title="League of Legends" />
+
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="input-label">Your Rank</label>
+                <select className="input" value={form.lolRank} onChange={(e) => setForm((p) => ({ ...p, lolRank: e.target.value }))}>
+                  <option value="">— Select rank —</option>
+                  {LOL_RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="input-label">Server / Region</label>
+                <select className="input" value={form.lolRegion} onChange={(e) => setForm((p) => ({ ...p, lolRegion: e.target.value }))}>
+                  <option value="">— Select server —</option>
+                  {LOL_REGIONS.map((r) => <option key={r} value={r}>{r} — {LOL_REGION_NAMES[r]}</option>)}
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label className="input-label">Your Lanes <span className="text-gray-400 normal-case font-normal tracking-normal">(select all that apply)</span></label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {LOL_LANES.map((lane) => (
+                  <button key={lane} type="button"
+                    onClick={() => toggleArray('lolLanes', lane, setForm)}
+                    className={`flex items-center gap-1.5 px-4 py-2 rounded-xl border text-sm font-display font-semibold tracking-wide transition-all ${
+                      form.lolLanes.includes(lane)
+                        ? 'bg-blue-50 border-blue-400 text-blue-700'
+                        : 'border-pp-border text-gray-500 hover:border-blue-400 hover:text-blue-600'
+                    }`}>
+                    {getLolLaneIcon(lane)} {lane}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* Favorite Champions (LoL only) */}
+        {form.game === 'lol' && (
+          <section className="card p-6 space-y-4">
+            <h2 className="font-display font-bold text-lg text-gray-900 flex items-center gap-2">
+              <span>⚔️</span> Favorite Champions
+              <span className="text-xs text-gray-400 font-body font-normal tracking-normal normal-case">(pick up to 5)</span>
+            </h2>
+            <div className="flex flex-wrap gap-2 max-h-72 overflow-y-auto pr-1">
+              {LOL_CHAMPIONS.map((key) => {
+                const icon = getLolChampionIcon(key);
+                const display = getLolChampionDisplay(key);
+                const selected = form.favoriteChampions.includes(key);
+                return (
+                  <button key={key} type="button"
+                    disabled={!selected && form.favoriteChampions.length >= 5}
+                    onClick={() => toggleArray('favoriteChampions', key, setForm)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                      selected
+                        ? 'bg-blue-50 border-blue-300 text-blue-700'
+                        : 'border-pp-border text-gray-500 hover:border-blue-400 hover:text-blue-700'
+                    }`}>
+                    <img src={icon} alt="" className="w-5 h-5 rounded-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                    {display}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* About You */}
         <section className="card p-6 space-y-4">
@@ -339,19 +449,21 @@ export default function EditProfilePage() {
         <section className="card p-6 space-y-4">
           <SectionHeader icon="🛡️" title="Roles & Playstyle" />
 
-          <div>
-            <label className="input-label">Your Roles <span className="text-gray-400 normal-case font-normal tracking-normal">(select all that apply)</span></label>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {ROLES.map((role) => (
-                <button key={role} type="button" onClick={() => toggleArray('roles', role, setForm)}
-                  className={`px-4 py-2 rounded-xl border text-sm font-display font-semibold tracking-wide transition-all ${
-                    form.roles.includes(role) ? 'bg-pp-orange-light border-pp-orange text-pp-orange' : 'border-pp-border text-gray-500 hover:border-pp-orange hover:text-pp-orange'
-                  }`}>
-                  {role}
-                </button>
-              ))}
+          {form.game === 'valorant' && (
+            <div>
+              <label className="input-label">Your Roles <span className="text-gray-400 normal-case font-normal tracking-normal">(select all that apply)</span></label>
+              <div className="flex flex-wrap gap-2 mt-2">
+                {ROLES.map((role) => (
+                  <button key={role} type="button" onClick={() => toggleArray('roles', role, setForm)}
+                    className={`px-4 py-2 rounded-xl border text-sm font-display font-semibold tracking-wide transition-all ${
+                      form.roles.includes(role) ? 'bg-pp-orange-light border-pp-orange text-pp-orange' : 'border-pp-border text-gray-500 hover:border-pp-orange hover:text-pp-orange'
+                    }`}>
+                    {role}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
+          )}
 
           <div>
             <label className="input-label">Playstyle Tags</label>
@@ -383,55 +495,59 @@ export default function EditProfilePage() {
           </div>
         </section>
 
-        {/* Duo Preferences */}
-        <section className="card p-6 space-y-4">
-          <SectionHeader icon="🏆" title="Duo Preferences" />
-          <div className="grid sm:grid-cols-2 gap-4">
-            <div>
-              <label className="input-label">Minimum Rank</label>
-              <select className="input" value={form.preferredRankMin} onChange={(e) => setForm({ ...form, preferredRankMin: e.target.value })}>
-                {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
+        {/* Duo Preferences (Valorant only) */}
+        {form.game === 'valorant' && (
+          <section className="card p-6 space-y-4">
+            <SectionHeader icon="🏆" title="Duo Preferences" />
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div>
+                <label className="input-label">Minimum Rank</label>
+                <select className="input" value={form.preferredRankMin} onChange={(e) => setForm({ ...form, preferredRankMin: e.target.value })}>
+                  {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="input-label">Maximum Rank</label>
+                <select className="input" value={form.preferredRankMax} onChange={(e) => setForm({ ...form, preferredRankMax: e.target.value })}>
+                  {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
+                </select>
+              </div>
             </div>
-            <div>
-              <label className="input-label">Maximum Rank</label>
-              <select className="input" value={form.preferredRankMax} onChange={(e) => setForm({ ...form, preferredRankMax: e.target.value })}>
-                {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
-              </select>
-            </div>
-          </div>
-          <p className="text-xs text-gray-400">You'll still appear in all searches — this just shows your preference on your card.</p>
-        </section>
+            <p className="text-xs text-gray-400">You'll still appear in all searches — this just shows your preference on your card.</p>
+          </section>
+        )}
 
-        {/* Favorite Agents */}
-        <section className="card p-6 space-y-4">
-          <h2 className="font-display font-bold text-lg text-gray-900 flex items-center gap-2">
-            <span>🦸</span> Favorite Agents
-            <span className="text-xs text-gray-400 font-body font-normal tracking-normal normal-case">(pick up to 5)</span>
-          </h2>
-          <div className="flex flex-wrap gap-2">
-            {AGENTS.map((agent) => {
-              const icon = getAgentIcon(agent);
-              const selected = form.favoriteAgents.includes(agent);
-              return (
-                <button key={agent} type="button"
-                  disabled={!selected && form.favoriteAgents.length >= 5}
-                  onClick={() => toggleArray('favoriteAgents', agent, setForm)}
-                  className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
-                    selected
-                      ? 'bg-amber-50 border-amber-300 text-amber-700'
-                      : 'border-pp-border text-gray-500 hover:border-pp-orange hover:text-pp-orange'
-                  }`}>
-                  {icon
-                    ? <img src={icon} alt="" className="w-4 h-4 rounded-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
-                    : null
-                  }
-                  {agent}
-                </button>
-              );
-            })}
-          </div>
-        </section>
+        {/* Favorite Agents (Valorant only) */}
+        {form.game === 'valorant' && (
+          <section className="card p-6 space-y-4">
+            <h2 className="font-display font-bold text-lg text-gray-900 flex items-center gap-2">
+              <span>🦸</span> Favorite Agents
+              <span className="text-xs text-gray-400 font-body font-normal tracking-normal normal-case">(pick up to 5)</span>
+            </h2>
+            <div className="flex flex-wrap gap-2">
+              {AGENTS.map((agent) => {
+                const icon = getAgentIcon(agent);
+                const selected = form.favoriteAgents.includes(agent);
+                return (
+                  <button key={agent} type="button"
+                    disabled={!selected && form.favoriteAgents.length >= 5}
+                    onClick={() => toggleArray('favoriteAgents', agent, setForm)}
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-xs font-medium transition-all disabled:opacity-30 disabled:cursor-not-allowed ${
+                      selected
+                        ? 'bg-amber-50 border-amber-300 text-amber-700'
+                        : 'border-pp-border text-gray-500 hover:border-pp-orange hover:text-pp-orange'
+                    }`}>
+                    {icon
+                      ? <img src={icon} alt="" className="w-4 h-4 rounded-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                      : null
+                    }
+                    {agent}
+                  </button>
+                );
+              })}
+            </div>
+          </section>
+        )}
 
         {/* Tracker Profile */}
         <section className="card p-6 space-y-4">

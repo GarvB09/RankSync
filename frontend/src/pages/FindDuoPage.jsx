@@ -8,6 +8,8 @@ import api from '../utils/api';
 import {
   RANKS, REGIONS, REGION_FLAGS, ROLES, PLAYSTYLES, getRegionFlagUrl,
   getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, formatLastSeen,
+  LOL_RANKS, LOL_REGIONS, LOL_REGION_NAMES, LOL_LANES, getLolRegionFlagUrl,
+  getLolRankColorClass, getLolRankIcon, getLolLaneIcon, getLolChampionIcon, getLolChampionDisplay,
 } from '../utils/rankUtils';
 import RankIcon from '../components/RankIcon';
 import ProfileModal from '../components/ProfileModal';
@@ -201,6 +203,13 @@ function FistbumpOverlay({ onDone }) {
   );
 }
 
+// ─── LoL Rank Icon ────────────────────────────────────────────────────────────
+function LolRankIcon({ rank, size = 'w-6 h-6' }) {
+  const src = getLolRankIcon(rank);
+  if (!src) return null;
+  return <img src={src} alt={rank} className={`${size} object-contain`} onError={(e) => { e.target.style.display = 'none'; }} />;
+}
+
 // ─── Player Card ──────────────────────────────────────────────────────────────
 function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpUsed, onLikeUsed, onFistbumpUsed, onPassed, onFistbumpAnim, onViewProfile }) {
   const [status, setStatus] = useState(player.connectionStatus || 'none');
@@ -308,10 +317,17 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
 
         {/* Rank + meta badges */}
         <div className="mt-2 flex items-center gap-2 flex-wrap justify-center px-3">
-          <span className={`font-mono font-bold text-sm flex items-center gap-1.5 ${getRankColorClass(player.rank)}`}>
-            <RankIcon rank={player.rank} size="w-6 h-6" />
-            {player.rank}
-          </span>
+          {player.game === 'lol' ? (
+            <span className={`font-mono font-bold text-sm flex items-center gap-1.5 ${getLolRankColorClass(player.lolRank)}`}>
+              <LolRankIcon rank={player.lolRank} size="w-6 h-6" />
+              {player.lolRank || 'Unranked'}
+            </span>
+          ) : (
+            <span className={`font-mono font-bold text-sm flex items-center gap-1.5 ${getRankColorClass(player.rank)}`}>
+              <RankIcon rank={player.rank} size="w-6 h-6" />
+              {player.rank}
+            </span>
+          )}
           {player.gender && (
             <span className="text-xs text-gray-500 bg-white/80 rounded-full px-2 py-0.5 border border-pp-border">
               {player.gender === 'Male' ? '♂' : player.gender === 'Female' ? '♀' : '⚧'} {player.gender}
@@ -343,7 +359,16 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
               </a>
             )}
           </div>
-          {player.riotId?.gameName && (
+          {player.game === 'lol' ? (
+            <div className="text-xs text-gray-400 font-mono mt-0.5 flex items-center gap-1">
+              {getLolRegionFlagUrl(player.lolRegion) && (
+                <img src={getLolRegionFlagUrl(player.lolRegion)} alt="" className="inline w-4 h-3 object-cover rounded-sm" />
+              )}
+              <span>{LOL_REGION_NAMES[player.lolRegion] || player.lolRegion}</span>
+              <span className="text-gray-300 mx-0.5">·</span>
+              <span className="text-blue-400 font-bold">{player.lolRegion}</span>
+            </div>
+          ) : player.riotId?.gameName ? (
             <div className="text-xs text-gray-400 font-mono mt-0.5">
               {player.riotId.gameName}#{player.riotId.tagLine}
               <span className="mx-1.5 text-gray-300">·</span>
@@ -352,17 +377,35 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
               )}
               {player.region}
             </div>
-          )}
+          ) : null}
         </div>
 
         {player.bio && <p className="text-xs text-gray-500 leading-relaxed line-clamp-2">{player.bio}</p>}
 
         <div className="flex flex-wrap gap-1.5">
-          {player.roles?.slice(0, 2).map((r) => (
-            <span key={r} className="text-xs bg-pp-input-bg text-gray-600 border border-pp-border px-2 py-0.5 rounded-full">
-              {getRoleIcon(r)} {r}
-            </span>
-          ))}
+          {player.game === 'lol' ? (
+            <>
+              {player.lolLanes?.slice(0, 3).map((lane) => (
+                <span key={lane} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
+                  {getLolLaneIcon(lane)} {lane}
+                </span>
+              ))}
+              {player.favoriteChampions?.slice(0, 2).map((key) => (
+                <span key={key} className="text-xs bg-pp-input-bg text-gray-600 border border-pp-border px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <img src={getLolChampionIcon(key)} alt="" className="w-3.5 h-3.5 rounded-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                  {getLolChampionDisplay(key)}
+                </span>
+              ))}
+            </>
+          ) : (
+            <>
+              {player.roles?.slice(0, 2).map((r) => (
+                <span key={r} className="text-xs bg-pp-input-bg text-gray-600 border border-pp-border px-2 py-0.5 rounded-full">
+                  {getRoleIcon(r)} {r}
+                </span>
+              ))}
+            </>
+          )}
           {player.playstyleTags?.slice(0, 2).map((tag) => (
             <span key={tag} className="text-xs bg-pp-orange-light text-pp-orange border border-orange-200 px-2 py-0.5 rounded-full">
               {tag}
@@ -425,7 +468,7 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
 }
 
 // ─── Filter Panel ─────────────────────────────────────────────────────────────
-function FilterPanel({ filters, onChange, onReset }) {
+function FilterPanel({ filters, onChange, onReset, game }) {
   const set = (key, val) => onChange({ ...filters, [key]: val });
 
   return (
@@ -435,48 +478,91 @@ function FilterPanel({ filters, onChange, onReset }) {
         <button onClick={onReset} className="text-xs text-gray-400 hover:text-pp-orange transition-colors">Reset</button>
       </div>
 
-      <div>
-        <label className="input-label">🌏 Region</label>
-        <select className="input" value={filters.region} onChange={(e) => set('region', e.target.value)}>
-          <option value="">All Asia Pacific</option>
-          {REGIONS.map((r) => <option key={r} value={r}>{REGION_FLAGS[r]} {r}</option>)}
-        </select>
-      </div>
-
-      <div>
-        <label className="input-label">Min Rank</label>
-        <select className="input" value={filters.rankMin} onChange={(e) => set('rankMin', e.target.value)}>
-          <option value="">Any</option>
-          {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
-      </div>
-
-      <div>
-        <label className="input-label">Max Rank</label>
-        <select className="input" value={filters.rankMax} onChange={(e) => set('rankMax', e.target.value)}>
-          <option value="">Any</option>
-          {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
-        </select>
-      </div>
-
-      <div>
-        <label className="input-label">Role</label>
-        <div className="space-y-1.5">
-          {ROLES.map((role) => (
-            <label key={role} className="flex items-center gap-2 cursor-pointer group">
-              <input
-                type="radio" name="role" value={role}
-                checked={filters.role === role}
-                onChange={() => set('role', filters.role === role ? '' : role)}
-                className="accent-pp-orange"
-              />
-              <span className="text-xs text-gray-500 group-hover:text-gray-900 transition-colors">
-                {getRoleIcon(role)} {role}
-              </span>
-            </label>
-          ))}
-        </div>
-      </div>
+      {game === 'lol' ? (
+        <>
+          <div>
+            <label className="input-label">🌍 Region</label>
+            <select className="input" value={filters.lolRegion} onChange={(e) => set('lolRegion', e.target.value)}>
+              <option value="">All Regions</option>
+              {LOL_REGIONS.map((r) => <option key={r} value={r}>{r} — {LOL_REGION_NAMES[r]}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="input-label">Min Rank</label>
+            <select className="input" value={filters.rankMin} onChange={(e) => set('rankMin', e.target.value)}>
+              <option value="">Any</option>
+              {LOL_RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="input-label">Max Rank</label>
+            <select className="input" value={filters.rankMax} onChange={(e) => set('rankMax', e.target.value)}>
+              <option value="">Any</option>
+              {LOL_RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="input-label">Lane</label>
+            <div className="space-y-1.5">
+              {LOL_LANES.map((lane) => (
+                <label key={lane} className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="radio" name="lane" value={lane}
+                    checked={filters.lane === lane}
+                    onChange={() => set('lane', filters.lane === lane ? '' : lane)}
+                    className="accent-pp-orange"
+                  />
+                  <span className="text-xs text-gray-500 group-hover:text-gray-900 transition-colors">
+                    {getLolLaneIcon(lane)} {lane}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </>
+      ) : (
+        <>
+          <div>
+            <label className="input-label">🌏 Region</label>
+            <select className="input" value={filters.region} onChange={(e) => set('region', e.target.value)}>
+              <option value="">All Asia Pacific</option>
+              {REGIONS.map((r) => <option key={r} value={r}>{REGION_FLAGS[r]} {r}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="input-label">Min Rank</label>
+            <select className="input" value={filters.rankMin} onChange={(e) => set('rankMin', e.target.value)}>
+              <option value="">Any</option>
+              {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="input-label">Max Rank</label>
+            <select className="input" value={filters.rankMax} onChange={(e) => set('rankMax', e.target.value)}>
+              <option value="">Any</option>
+              {RANKS.map((r) => <option key={r} value={r}>{r}</option>)}
+            </select>
+          </div>
+          <div>
+            <label className="input-label">Role</label>
+            <div className="space-y-1.5">
+              {ROLES.map((role) => (
+                <label key={role} className="flex items-center gap-2 cursor-pointer group">
+                  <input
+                    type="radio" name="role" value={role}
+                    checked={filters.role === role}
+                    onChange={() => set('role', filters.role === role ? '' : role)}
+                    className="accent-pp-orange"
+                  />
+                  <span className="text-xs text-gray-500 group-hover:text-gray-900 transition-colors">
+                    {getRoleIcon(role)} {role}
+                  </span>
+                </label>
+              ))}
+            </div>
+          </div>
+        </>
+      )}
 
       <div>
         <label className="input-label">Playstyle</label>
@@ -531,10 +617,11 @@ function FilterPanel({ filters, onChange, onReset }) {
 }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
-const DEFAULT_FILTERS = { region: '', rankMin: '', rankMax: '', role: '', playstyle: '', voiceChat: '', gender: '' };
+const DEFAULT_FILTERS = { region: '', rankMin: '', rankMax: '', role: '', lane: '', lolRegion: '', playstyle: '', voiceChat: '', gender: '' };
 
 export default function FindDuoPage() {
   const { user } = useAuthStore();
+  const [game, setGame] = useState('valorant');
   const [players, setPlayers] = useState([]);
   const [pagination, setPagination] = useState({ total: 0, page: 1, pages: 1 });
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
@@ -549,19 +636,24 @@ export default function FindDuoPage() {
   const likesLeft = DAILY_LIKE_LIMIT - likesUsed;
   const fistbumpUsed = fistbumpStatus.used;
 
+  const handleGameSwitch = (g) => {
+    setGame(g);
+    setFilters(DEFAULT_FILTERS);
+  };
+
   const fetchPlayers = useCallback(async (page = 1) => {
     setLoading(true);
     try {
-      const params = new URLSearchParams({ page, limit: 20 });
+      const params = new URLSearchParams({ page, limit: 20, game });
       Object.entries(filters).forEach(([k, v]) => { if (v) params.set(k, v); });
       const { data } = await api.get(`/users/find-duo?${params}`);
       setPlayers(data.users);
       setPagination(data.pagination);
     } catch { toast.error('Failed to load players'); }
     finally { setLoading(false); }
-  }, [filters]);
+  }, [filters, game]);
 
-  useEffect(() => { fetchPlayers(1); }, [filters]);
+  useEffect(() => { fetchPlayers(1); }, [filters, game]);
 
   const handleRequest = async (userId, isFistbump = false) => {
     try {
@@ -621,6 +713,31 @@ export default function FindDuoPage() {
           <p className="text-pp-subtle text-xs mt-1 font-display tracking-wide uppercase">
             {loading ? 'Searching...' : `${visiblePlayers.length} players`}
           </p>
+          {/* Game Toggle */}
+          <div className="flex items-center gap-1 mt-3 p-1 bg-pp-input-bg rounded-xl border border-pp-border w-fit">
+            <button
+              onClick={() => handleGameSwitch('valorant')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
+                game === 'valorant'
+                  ? 'bg-pp-orange text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              <img src="https://media.valorant-api.com/episodes/6/displayicon.png" alt="" className="w-4 h-4 object-contain" onError={(e) => { e.target.style.display='none'; }} />
+              Valorant
+            </button>
+            <button
+              onClick={() => handleGameSwitch('lol')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wide transition-all ${
+                game === 'lol'
+                  ? 'bg-blue-600 text-white shadow-sm'
+                  : 'text-gray-500 hover:text-gray-800'
+              }`}
+            >
+              <img src="https://raw.communitydragon.org/latest/plugins/rcp-be-lol-game-data/global/default/assets/images/ranked-emblems/emblem-gold.png" alt="" className="w-4 h-4 object-contain" onError={(e) => { e.target.style.display='none'; }} />
+              League of Legends
+            </button>
+          </div>
         </div>
 
         <div className="flex items-center gap-2 flex-wrap">
@@ -658,7 +775,7 @@ export default function FindDuoPage() {
             <button onClick={() => setShowFilters(false)} className="text-gray-400 hover:text-gray-900">✕</button>
           </div>
           <div className="bg-white border border-pp-border rounded-2xl p-5 sticky top-4 shadow-sm">
-            <FilterPanel filters={filters} onChange={setFilters} onReset={() => setFilters(DEFAULT_FILTERS)} />
+            <FilterPanel filters={filters} onChange={setFilters} onReset={() => setFilters(DEFAULT_FILTERS)} game={game} />
           </div>
         </aside>
 

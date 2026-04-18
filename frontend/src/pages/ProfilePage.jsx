@@ -7,7 +7,17 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import useAuthStore from '../context/authStore';
 import api, { API_URL } from '../utils/api';
-import { getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, getRegionFlagUrl, formatLastSeen, getAgentIcon } from '../utils/rankUtils';
+import {
+  getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, getRegionFlagUrl, formatLastSeen, getAgentIcon,
+  getLolRankColorClass, getLolRankIcon, getLolRegionFlagUrl, LOL_REGION_NAMES,
+  getLolLaneIcon, getLolChampionIcon, getLolChampionDisplay,
+} from '../utils/rankUtils';
+
+function LolRankIcon({ rank, size = 'w-8 h-8' }) {
+  const src = getLolRankIcon(rank);
+  if (!src) return null;
+  return <img src={src} alt={rank} className={`${size} object-contain`} onError={(e) => { e.target.style.display = 'none'; }} />;
+}
 import RankIcon from '../components/RankIcon';
 import toast from 'react-hot-toast';
 
@@ -123,16 +133,35 @@ export default function ProfilePage() {
               </div>
             )}
             <div className="flex items-center gap-3 mt-2 flex-wrap">
-              <span className={`font-mono font-bold flex items-center gap-2 ${getRankColorClass(profile.rank)}`}>
-                <RankIcon rank={profile.rank} size="w-8 h-8" />
-                <span className="text-lg">{profile.rank || 'Unranked'}</span>
-              </span>
-              <span className="text-gray-300">·</span>
-              {profile.region && (
-                <span className="text-sm text-gray-500 flex items-center gap-1.5">
-                  <img src={getRegionFlagUrl(profile.region)} alt="" className="w-5 h-3.5 object-cover rounded-sm" />
-                  {profile.region}
+              {profile.game === 'lol' ? (
+                <span className={`font-mono font-bold flex items-center gap-2 ${getLolRankColorClass(profile.lolRank)}`}>
+                  <LolRankIcon rank={profile.lolRank} />
+                  <span className="text-lg">{profile.lolRank || 'Unranked'}</span>
                 </span>
+              ) : (
+                <span className={`font-mono font-bold flex items-center gap-2 ${getRankColorClass(profile.rank)}`}>
+                  <RankIcon rank={profile.rank} size="w-8 h-8" />
+                  <span className="text-lg">{profile.rank || 'Unranked'}</span>
+                </span>
+              )}
+              <span className="text-gray-300">·</span>
+              {profile.game === 'lol' ? (
+                profile.lolRegion && (
+                  <span className="text-sm text-gray-500 flex items-center gap-1.5">
+                    {getLolRegionFlagUrl(profile.lolRegion) && (
+                      <img src={getLolRegionFlagUrl(profile.lolRegion)} alt="" className="w-5 h-3.5 object-cover rounded-sm" />
+                    )}
+                    <span className="font-bold text-blue-600">{profile.lolRegion}</span>
+                    <span>— {LOL_REGION_NAMES[profile.lolRegion]}</span>
+                  </span>
+                )
+              ) : (
+                profile.region && (
+                  <span className="text-sm text-gray-500 flex items-center gap-1.5">
+                    <img src={getRegionFlagUrl(profile.region)} alt="" className="w-5 h-3.5 object-cover rounded-sm" />
+                    {profile.region}
+                  </span>
+                )
               )}
               {vcLabel && <><span className="text-gray-300">·</span><span className="text-sm text-gray-500">{vcLabel}</span></>}
             </div>
@@ -169,10 +198,22 @@ export default function ProfilePage() {
       </motion.div>
 
       {/* Playstyle */}
-      {(profile.roles?.length > 0 || profile.playstyleTags?.length > 0) && (
+      {(profile.roles?.length > 0 || profile.lolLanes?.length > 0 || profile.playstyleTags?.length > 0) && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="card p-6 space-y-4">
           <h2 className="font-display font-bold text-base text-gray-900">PLAYSTYLE</h2>
-          {profile.roles?.length > 0 && (
+          {profile.game === 'lol' && profile.lolLanes?.length > 0 && (
+            <div>
+              <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Lanes</div>
+              <div className="flex flex-wrap gap-2">
+                {profile.lolLanes.map((lane) => (
+                  <span key={lane} className="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full text-sm text-blue-700 font-medium">
+                    {getLolLaneIcon(lane)} {lane}
+                  </span>
+                ))}
+              </div>
+            </div>
+          )}
+          {profile.game !== 'lol' && profile.roles?.length > 0 && (
             <div>
               <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Roles</div>
               <div className="flex flex-wrap gap-2">
@@ -199,8 +240,8 @@ export default function ProfilePage() {
         </motion.div>
       )}
 
-      {/* Looking for */}
-      {profile.preferredRankMin && (
+      {/* Looking for (Valorant only) */}
+      {profile.game !== 'lol' && profile.preferredRankMin && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }} className="card p-6">
           <h2 className="font-display font-bold text-base text-gray-900 mb-3">LOOKING FOR</h2>
           <div className="flex items-center gap-3">
@@ -217,8 +258,23 @@ export default function ProfilePage() {
         </motion.div>
       )}
 
-      {/* Favorite agents */}
-      {profile.favoriteAgents?.length > 0 && (
+      {/* Favorite Champions (LoL) */}
+      {profile.game === 'lol' && profile.favoriteChampions?.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6">
+          <h2 className="font-display font-bold text-base text-gray-900 mb-3">FAVORITE CHAMPIONS</h2>
+          <div className="flex flex-wrap gap-2">
+            {profile.favoriteChampions.map((key) => (
+              <span key={key} className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full text-sm text-blue-800 font-medium">
+                <img src={getLolChampionIcon(key)} alt={key} className="w-5 h-5 rounded-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                {getLolChampionDisplay(key)}
+              </span>
+            ))}
+          </div>
+        </motion.div>
+      )}
+
+      {/* Favorite Agents (Valorant) */}
+      {profile.game !== 'lol' && profile.favoriteAgents?.length > 0 && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="card p-6">
           <h2 className="font-display font-bold text-base text-gray-900 mb-3">FAVORITE AGENTS</h2>
           <div className="flex flex-wrap gap-2">

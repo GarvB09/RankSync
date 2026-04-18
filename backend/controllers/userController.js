@@ -5,7 +5,7 @@
 
 const User = require('../models/User');
 const { Notification } = require('../models/Chat');
-const { RANKS } = require('../models/User');
+const { RANKS, LOL_RANKS } = require('../models/User');
 
 // ─── @GET /api/users/profile/:username ───────────────────────────────────────
 exports.getProfile = async (req, res, next) => {
@@ -31,6 +31,7 @@ exports.updateProfile = async (req, res, next) => {
       'bio', 'age', 'gender', 'region', 'roles', 'playstyleTags', 'voiceChatPreference',
       'preferredRankMin', 'preferredRankMax', 'availability',
       'favoriteAgents', 'avatar', 'trackerUrl',
+      'game', 'lolRank', 'lolRegion', 'lolLanes', 'favoriteChampions',
     ];
 
     const updates = {};
@@ -40,15 +41,12 @@ exports.updateProfile = async (req, res, next) => {
       }
     });
 
-    // Check if profile is complete
+    // Check if profile is complete (either game)
     const user = await User.findById(req.user.id);
     const merged = { ...user.toObject(), ...updates };
-    const isComplete = !!(
-      merged.riotId?.gameName &&
-      merged.rank &&
-      merged.region &&
-      merged.roles?.length > 0
-    );
+    const isComplete = merged.game === 'lol'
+      ? !!(merged.lolRank && merged.lolRegion && merged.lolLanes?.length > 0)
+      : !!(merged.riotId?.gameName && merged.rank && merged.region && merged.roles?.length > 0);
     updates.isProfileComplete = isComplete;
 
     const updatedUser = await User.findByIdAndUpdate(
@@ -67,10 +65,13 @@ exports.updateProfile = async (req, res, next) => {
 exports.findDuo = async (req, res, next) => {
   try {
     const {
+      game = 'valorant',
       region,
       rankMin,
       rankMax,
       role,
+      lane,
+      lolRegion,
       playstyle,
       voiceChat,
       gender,
@@ -79,44 +80,40 @@ exports.findDuo = async (req, res, next) => {
     } = req.query;
 
     const filter = {
-      _id: { $ne: req.user.id },           // Exclude self
+      _id: { $ne: req.user.id },
       isProfileComplete: true,
-      isHidden: { $ne: true },             // Exclude hidden/demo accounts
-      // Exclude already-connected or pending
+      isHidden: { $ne: true },
       connections: { $nin: [req.user.id] },
+      game,
     };
 
-    // Region filter
-    if (region) filter.region = region;
-
-    // Role filter
-    if (role) filter.roles = { $in: [role] };
-
-    // Playstyle filter
-    if (playstyle) filter.playstyleTags = { $in: [playstyle] };
-
-    // Voice chat filter
-    if (voiceChat) filter.voiceChatPreference = voiceChat;
-
-    // Gender filter
-    if (gender) filter.gender = gender;
-
-    // Rank range filter using RANKS index
-    if (rankMin || rankMax) {
-      const minIndex = rankMin ? RANKS.indexOf(rankMin) : 0;
-      const maxIndex = rankMax ? RANKS.indexOf(rankMax) : RANKS.length - 1;
-      const validRanks = RANKS.slice(
-        Math.max(0, minIndex),
-        Math.min(RANKS.length, maxIndex + 1)
-      );
-      filter.rank = { $in: validRanks };
+    if (game === 'lol') {
+      if (lolRegion) filter.lolRegion = lolRegion;
+      if (lane) filter.lolLanes = { $in: [lane] };
+      if (rankMin || rankMax) {
+        const minIdx = rankMin ? LOL_RANKS.indexOf(rankMin) : 0;
+        const maxIdx = rankMax ? LOL_RANKS.indexOf(rankMax) : LOL_RANKS.length - 1;
+        filter.lolRank = { $in: LOL_RANKS.slice(Math.max(0, minIdx), Math.min(LOL_RANKS.length, maxIdx + 1)) };
+      }
+    } else {
+      if (region) filter.region = region;
+      if (role) filter.roles = { $in: [role] };
+      if (rankMin || rankMax) {
+        const minIndex = rankMin ? RANKS.indexOf(rankMin) : 0;
+        const maxIndex = rankMax ? RANKS.indexOf(rankMax) : RANKS.length - 1;
+        filter.rank = { $in: RANKS.slice(Math.max(0, minIndex), Math.min(RANKS.length, maxIndex + 1)) };
+      }
     }
+
+    if (playstyle) filter.playstyleTags = { $in: [playstyle] };
+    if (voiceChat) filter.voiceChatPreference = voiceChat;
+    if (gender) filter.gender = gender;
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const [users, total] = await Promise.all([
       User.find(filter)
-        .select('username avatar age gender rank region roles playstyleTags voiceChatPreference bio isOnline lastSeen duoRating favoriteAgents riotId riotVerified trackerUrl')
+        .select('username avatar age gender rank region roles playstyleTags voiceChatPreference bio isOnline lastSeen duoRating favoriteAgents riotId riotVerified trackerUrl game lolRank lolRegion lolLanes favoriteChampions')
         .sort({ isOnline: -1, duoRating: -1 })
         .skip(skip)
         .limit(parseInt(limit))

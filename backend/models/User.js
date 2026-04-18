@@ -28,6 +28,23 @@ const REGIONS = [
 const ROLES = ['Duelist', 'Controller', 'Initiator', 'Sentinel', 'Flex'];
 const PLAYSTYLES = ['Competitive', 'Casual', 'Aggressive', 'Chill', 'Tactical', 'IGL'];
 
+// LoL constants
+const LOL_RANKS = [
+  'Iron 4', 'Iron 3', 'Iron 2', 'Iron 1',
+  'Bronze 4', 'Bronze 3', 'Bronze 2', 'Bronze 1',
+  'Silver 4', 'Silver 3', 'Silver 2', 'Silver 1',
+  'Gold 4', 'Gold 3', 'Gold 2', 'Gold 1',
+  'Platinum 4', 'Platinum 3', 'Platinum 2', 'Platinum 1',
+  'Emerald 4', 'Emerald 3', 'Emerald 2', 'Emerald 1',
+  'Diamond 4', 'Diamond 3', 'Diamond 2', 'Diamond 1',
+  'Master', 'Grandmaster', 'Challenger',
+];
+const LOL_REGIONS = [
+  'NA', 'EUW', 'EUNE', 'KR', 'JP', 'BR', 'LAN', 'LAS', 'OCE', 'TR', 'RU',
+  'PH', 'SG', 'TH', 'VN', 'ID', 'TW',
+];
+const LOL_LANES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support', 'Fill'];
+
 // ─── Schema ───────────────────────────────────────────────────────────────────
 const userSchema = new mongoose.Schema(
   {
@@ -154,6 +171,33 @@ const userSchema = new mongoose.Schema(
       maxlength: 30,
     }],
 
+    // Game selection
+    game: {
+      type: String,
+      enum: ['valorant', 'lol'],
+      default: 'valorant',
+    },
+
+    // League of Legends fields
+    lolRank: {
+      type: String,
+      enum: [...LOL_RANKS, null],
+      default: null,
+    },
+    lolRegion: {
+      type: String,
+      enum: [...LOL_REGIONS, null],
+      default: null,
+    },
+    lolLanes: [{
+      type: String,
+      enum: LOL_LANES,
+    }],
+    favoriteChampions: [{
+      type: String,
+      maxlength: 30,
+    }],
+
     // Tracker profile URL (tracker.gg, blitz.gg, etc.)
     trackerUrl: {
       type: String,
@@ -254,3 +298,6 @@ module.exports.RANKS = RANKS;
 module.exports.REGIONS = REGIONS;
 module.exports.ROLES = ROLES;
 module.exports.PLAYSTYLES = PLAYSTYLES;
+module.exports.LOL_RANKS = LOL_RANKS;
+module.exports.LOL_REGIONS = LOL_REGIONS;
+module.exports.LOL_LANES = LOL_LANES;

@@ -9,8 +9,16 @@ import api, { API_URL } from '../utils/api';
 import {
   getRankColorClass, getRankEmoji,
   getRoleIcon, getRegionFlagUrl, formatLastSeen, getAgentIcon,
+  getLolRankColorClass, getLolRankIcon, getLolRegionFlagUrl, LOL_REGION_NAMES,
+  getLolLaneIcon, getLolChampionIcon, getLolChampionDisplay,
 } from '../utils/rankUtils';
 import RankIcon from './RankIcon';
+
+function LolRankIcon({ rank, size = 'w-7 h-7' }) {
+  const src = getLolRankIcon(rank);
+  if (!src) return null;
+  return <img src={src} alt={rank} className={`${size} object-contain`} onError={(e) => { e.target.style.display = 'none'; }} />;
+}
 import toast from 'react-hot-toast';
 
 export default function ProfileModal({ username, onClose, currentUserId, connections, sentRequests }) {
@@ -171,10 +179,17 @@ export default function ProfileModal({ username, onClose, currentUserId, connect
                         </div>
 
                         {/* Rank inline */}
-                        <div className={`mt-2 flex items-center gap-1.5 font-mono font-bold text-base ${getRankColorClass(profile.rank)}`}>
-                          <RankIcon rank={profile.rank} size="w-7 h-7" />
-                          {profile.rank || 'Unranked'}
-                        </div>
+                        {profile.game === 'lol' ? (
+                          <div className={`mt-2 flex items-center gap-1.5 font-mono font-bold text-base ${getLolRankColorClass(profile.lolRank)}`}>
+                            <LolRankIcon rank={profile.lolRank} />
+                            {profile.lolRank || 'Unranked'}
+                          </div>
+                        ) : (
+                          <div className={`mt-2 flex items-center gap-1.5 font-mono font-bold text-base ${getRankColorClass(profile.rank)}`}>
+                            <RankIcon rank={profile.rank} size="w-7 h-7" />
+                            {profile.rank || 'Unranked'}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -206,16 +221,31 @@ export default function ProfileModal({ username, onClose, currentUserId, connect
 
                     {/* ── Info grid ── */}
                     <div className="grid grid-cols-2 gap-3">
-                      {profile.region && (
-                        <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
-                          <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--pp-muted)' }}>Region</div>
-                          <div className="flex items-center gap-1.5 text-sm font-medium">
-                            {getRegionFlagUrl(profile.region) && (
-                              <img src={getRegionFlagUrl(profile.region)} alt="" className="w-5 h-3.5 object-cover rounded-sm" />
-                            )}
-                            {profile.region}
+                      {profile.game === 'lol' ? (
+                        profile.lolRegion && (
+                          <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--pp-muted)' }}>Server</div>
+                            <div className="flex items-center gap-1.5 text-sm font-medium">
+                              {getLolRegionFlagUrl(profile.lolRegion) && (
+                                <img src={getLolRegionFlagUrl(profile.lolRegion)} alt="" className="w-5 h-3.5 object-cover rounded-sm" />
+                              )}
+                              <span className="font-bold text-blue-600">{profile.lolRegion}</span>
+                              <span className="text-xs text-gray-400">{LOL_REGION_NAMES[profile.lolRegion]}</span>
+                            </div>
                           </div>
-                        </div>
+                        )
+                      ) : (
+                        profile.region && (
+                          <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
+                            <div className="text-[10px] font-bold uppercase tracking-wider mb-1.5" style={{ color: 'var(--pp-muted)' }}>Region</div>
+                            <div className="flex items-center gap-1.5 text-sm font-medium">
+                              {getRegionFlagUrl(profile.region) && (
+                                <img src={getRegionFlagUrl(profile.region)} alt="" className="w-5 h-3.5 object-cover rounded-sm" />
+                              )}
+                              {profile.region}
+                            </div>
+                          </div>
+                        )
                       )}
                       {vcLabel && (
                         <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
@@ -245,11 +275,20 @@ export default function ProfileModal({ username, onClose, currentUserId, connect
                       </div>
                     )}
 
-                    {/* ── Roles + playstyle ── */}
-                    {(profile.roles?.length > 0 || profile.playstyleTags?.length > 0) && (
+                    {/* ── Roles/Lanes + playstyle ── */}
+                    {(profile.roles?.length > 0 || profile.lolLanes?.length > 0 || profile.playstyleTags?.length > 0) && (
                       <div className="rounded-2xl p-4 space-y-3" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
                         <div className="text-[10px] font-bold uppercase tracking-wider" style={{ color: 'var(--pp-muted)' }}>Playstyle</div>
-                        {profile.roles?.length > 0 && (
+                        {profile.game === 'lol' && profile.lolLanes?.length > 0 && (
+                          <div className="flex flex-wrap gap-1.5">
+                            {profile.lolLanes.map((lane) => (
+                              <span key={lane} className="text-xs px-3 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-blue-700 font-medium">
+                                {getLolLaneIcon(lane)} {lane}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {profile.game !== 'lol' && profile.roles?.length > 0 && (
                           <div className="flex flex-wrap gap-1.5">
                             {profile.roles.map((r) => (
                               <span key={r} className="text-xs px-3 py-1.5 rounded-full border font-medium"
@@ -271,8 +310,24 @@ export default function ProfileModal({ username, onClose, currentUserId, connect
                       </div>
                     )}
 
-                    {/* ── Favorite agents ── */}
-                    {profile.favoriteAgents?.length > 0 && (
+                    {/* ── Favorite Champions (LoL) ── */}
+                    {profile.game === 'lol' && profile.favoriteChampions?.length > 0 && (
+                      <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
+                        <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--pp-muted)' }}>Favourite Champions</div>
+                        <div className="flex flex-wrap gap-2">
+                          {profile.favoriteChampions.map((key) => (
+                            <span key={key} className="flex items-center gap-1.5 px-3 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-sm font-medium text-blue-800"
+                                  style={{ backgroundColor: 'var(--pp-surface)' }}>
+                              <img src={getLolChampionIcon(key)} alt={key} className="w-5 h-5 rounded-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} />
+                              {getLolChampionDisplay(key)}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* ── Favorite Agents (Valorant) ── */}
+                    {profile.game !== 'lol' && profile.favoriteAgents?.length > 0 && (
                       <div className="rounded-2xl p-4" style={{ backgroundColor: 'var(--pp-input-bg)' }}>
                         <div className="text-[10px] font-bold uppercase tracking-wider mb-3" style={{ color: 'var(--pp-muted)' }}>Favourite Agents</div>
                         <div className="flex flex-wrap gap-2">

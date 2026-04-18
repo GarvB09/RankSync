@@ -180,3 +180,106 @@ export const formatLastSeen = (lastSeen) => {
   if (hours < 24) return `${hours}h ago`;
   return `${Math.floor(hours / 24)}d ago`;
 };
+
+// ─── League of Legends ────────────────────────────────────────────────────────
+
+export const LOL_RANKS = [
+  'Iron 4', 'Iron 3', 'Iron 2', 'Iron 1',
+  'Bronze 4', 'Bronze 3', 'Bronze 2', 'Bronze 1',
+  'Silver 4', 'Silver 3', 'Silver 2', 'Silver 1',
+  'Gold 4', 'Gold 3', 'Gold 2', 'Gold 1',
+  'Platinum 4', 'Platinum 3', 'Platinum 2', 'Platinum 1',
+  'Emerald 4', 'Emerald 3', 'Emerald 2', 'Emerald 1',
+  'Diamond 4', 'Diamond 3', 'Diamond 2', 'Diamond 1',
+  'Master', 'Grandmaster', 'Challenger',
+];
+
+export const LOL_LANES = ['Top', 'Jungle', 'Mid', 'ADC', 'Support', 'Fill'];
+
+export const LOL_REGIONS = [
+  'NA', 'EUW', 'EUNE', 'KR', 'JP', 'BR', 'LAN', 'LAS', 'OCE', 'TR', 'RU',
+  'PH', 'SG', 'TH', 'VN', 'ID', 'TW',
+];
+
+export const LOL_REGION_NAMES = {
+  NA: 'North America', EUW: 'EU West', EUNE: 'EU Nordic & East',
+  KR: 'Korea', JP: 'Japan', BR: 'Brazil',
+  LAN: 'Latin America North', LAS: 'Latin America South',
+  OCE: 'Oceania', TR: 'Turkey', RU: 'Russia',
+  PH: 'Philippines', SG: 'Singapore', TH: 'Thailand',
+  VN: 'Vietnam', ID: 'Indonesia', TW: 'Taiwan',
+};
+
+const LOL_REGION_FLAG_CODES = {
+  NA: 'us', EUW: 'eu', EUNE: 'eu', KR: 'kr', JP: 'jp', BR: 'br',
+  LAN: 'mx', LAS: 'ar', OCE: 'au', TR: 'tr', RU: 'ru',
+  PH: 'ph', SG: 'sg', TH: 'th', VN: 'vn', ID: 'id', TW: 'tw',
+};
+
+export const getLolRegionFlagUrl = (region) => {
+  const code = LOL_REGION_FLAG_CODES[region];
+  return code ? `https://raw.githubusercontent.com/lipis/flag-icons/main/flags/4x3/${code}.svg` : null;
+};
+
+export const LOL_CHAMPIONS = [
+  'Aatrox', 'Ahri', 'Akali', 'Akshan', 'Alistar', 'Ambessa', 'Amumu', 'Anivia', 'Annie',
+  'Aphelios', 'Ashe', 'AurelionSol', 'Aurora', 'Azir', 'Bard', 'BelVeth', 'Blitzcrank',
+  'Brand', 'Braum', 'Briar', 'Caitlyn', 'Camille', 'Cassiopeia', 'ChoGath', 'Corki',
+  'Darius', 'Diana', 'DrMundo', 'Draven', 'Ekko', 'Elise', 'Evelynn', 'Ezreal',
+  'Fiddlesticks', 'Fiora', 'Fizz', 'Galio', 'Gangplank', 'Garen', 'Gnar', 'Gragas',
+  'Graves', 'Gwen', 'Hecarim', 'Heimerdinger', 'Hwei', 'Illaoi', 'Irelia', 'Ivern',
+  'Janna', 'JarvanIV', 'Jax', 'Jayce', 'Jhin', 'Jinx', 'KSante', 'Kaisa', 'Kalista',
+  'Karma', 'Karthus', 'Kassadin', 'Katarina', 'Kayle', 'Kayn', 'Kennen', 'Khazix',
+  'Kindred', 'Kled', 'KogMaw', 'Leblanc', 'LeeSin', 'Leona', 'Lillia', 'Lissandra',
+  'Lucian', 'Lulu', 'Lux', 'Malphite', 'Malzahar', 'Maokai', 'MasterYi', 'Mel',
+  'MissFortune', 'Mordekaiser', 'Morgana', 'Naafiri', 'Nami', 'Nasus', 'Nautilus',
+  'Neeko', 'Nidalee', 'Nilah', 'Nocturne', 'Nunu', 'Olaf', 'Orianna', 'Ornn',
+  'Pantheon', 'Poppy', 'Pyke', 'Qiyana', 'Quinn', 'Rakan', 'Rammus', 'RekSai',
+  'Rell', 'Renata', 'Renekton', 'Rengar', 'Riven', 'Rumble', 'Ryze', 'Samira',
+  'Sejuani', 'Senna', 'Seraphine', 'Sett', 'Shaco', 'Shen', 'Shyvana', 'Singed',
+  'Sion', 'Sivir', 'Skarner', 'Smolder', 'Sona', 'Soraka', 'Swain', 'Sylas',
+  'Syndra', 'TahmKench', 'Taliyah', 'Talon', 'Taric', 'Teemo', 'Thresh', 'Tristana',
+  'Trundle', 'Tryndamere', 'TwistedFate', 'Twitch', 'Udyr', 'Urgot', 'Varus',
+  'Vayne', 'Veigar', 'VelKoz', 'Vex', 'Vi', 'Viego', 'Viktor', 'Vladimir', 'Volibear',
+  'Warwick', 'MonkeyKing', 'Xayah', 'Xerath', 'XinZhao', 'Yasuo', 'Yone', 'Yorick',
+  'Yuumi', 'Zac', 'Zed', 'Zeri', 'Ziggs', 'Zilean', 'Zoe', 'Zyra',
+];
+
+// Champion display names for keys that differ from DD key
+const LOL_CHAMPION_DISPLAY = {
+  ChoGath: "Cho'Gath", DrMundo: 'Dr. Mundo', JarvanIV: 'Jarvan IV',
+  KSante: "K'Sante", Kaisa: "Kai'Sa", Khazix: "Kha'Zix",
+  KogMaw: "Kog'Maw", Leblanc: 'LeBlanc', LeeSin: 'Lee Sin',
+  MasterYi: 'Master Yi', MissFortune: 'Miss Fortune', MonkeyKing: 'Wukong',
+  Nunu: 'Nunu & Willump', RekSai: "Rek'Sai", TahmKench: 'Tahm Kench',
+  TwistedFate: 'Twisted Fate', VelKoz: "Vel'Koz", XinZhao: 'Xin Zhao',
+  AurelionSol: 'Aurelion Sol', BelVeth: "Bel'Veth",
+};
+
+export const getLolChampionDisplay = (key) => LOL_CHAMPION_DISPLAY[key] || key;
+
+const LOL_DDV = '14.24.1';
+export const getLolChampionIcon = (key) =>
+  `https://ddragon.leagueoflegends.com/cdn/${LOL_DDV}/img/champion/${key}.png`;
+
+export const getLolRankColorClass = (rank) => {
+  const tier = rank?.split(' ')[0]?.toLowerCase();
+  const map = {
+    iron: 'text-gray-400', bronze: 'text-amber-600', silver: 'text-gray-300',
+    gold: 'text-yellow-400', platinum: 'text-teal-400', emerald: 'text-green-400',
+    diamond: 'text-blue-400', master: 'text-purple-400',
+    grandmaster: 'text-red-500', challenger: 'text-yellow-300',
+  };
+  return map[tier] || 'text-gray-300';
+};
+
+export const getLolRankIcon = (rank) => {
+  const tier = rank?.split(' ')[0]?.toLowerCase();
+  if (!tier) return null;
+  return `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-mini-crests/${tier}.png`;
+};
+
+export const getLolLaneIcon = (lane) => {
+  const map = { Top: '🛡️', Jungle: '🌲', Mid: '⚔️', ADC: '🏹', Support: '💊', Fill: '🔄' };
+  return map[lane] || '🎮';
+};
