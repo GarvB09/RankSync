@@ -7,14 +7,16 @@ const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'garv.b2005@gmail.com';
 
 // POST /api/feedback — any logged-in user submits feedback
 router.post('/', protect, async (req, res) => {
+  const ALLOWED_TYPES = ['bug', 'feature', 'general', 'other'];
   try {
     const { message, type } = req.body;
     if (!message?.trim()) {
       return res.status(400).json({ success: false, message: 'Message is required' });
     }
+    const safeType = ALLOWED_TYPES.includes(type) ? type : 'general';
     const fb = await Feedback.create({
-      message: message.trim(),
-      type: type || 'general',
+      message: message.trim().slice(0, 2000),
+      type: safeType,
       user: {
         id:       req.user._id,
         username: req.user.username,

@@ -204,6 +204,17 @@ const userSchema = new mongoose.Schema(
       default: null,
       trim: true,
       maxlength: [300, 'Tracker URL too long'],
+      validate: {
+        validator: (v) => {
+          if (!v) return true;
+          if (/^(javascript|data|vbscript):/i.test(v.trim())) return false;
+          try {
+            const u = new URL(v);
+            return ['http:', 'https:'].includes(u.protocol);
+          } catch { return false; }
+        },
+        message: 'Tracker URL must be a valid http/https URL',
+      },
     },
 
     // Social / Status
@@ -278,7 +289,7 @@ userSchema.methods.comparePassword = async function (enteredPassword) {
 userSchema.methods.getSignedJwtToken = function () {
   return jwt.sign(
     { id: this._id, username: this.username },
-    process.env.JWT_SECRET || 'fallback_secret',
+    process.env.JWT_SECRET,
     { expiresIn: process.env.JWT_EXPIRE || '7d' }
   );
 };

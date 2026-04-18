@@ -76,8 +76,8 @@ const registerValidation = [
     .withMessage('Username can only contain letters, numbers, and underscores'),
   body('email').isEmail().withMessage('Please enter a valid email').normalizeEmail(),
   body('password')
-    .isLength({ min: 6 })
-    .withMessage('Password must be at least 6 characters'),
+    .isLength({ min: 8 })
+    .withMessage('Password must be at least 8 characters'),
 ];
 
 const loginValidation = [

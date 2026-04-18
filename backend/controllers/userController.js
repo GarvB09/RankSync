@@ -6,6 +6,7 @@
 const User = require('../models/User');
 const { Notification } = require('../models/Chat');
 const { RANKS, LOL_RANKS } = require('../models/User');
+const { stripHtml, isAllowedUrl } = require('../utils/sanitize');
 
 // ─── @GET /api/users/profile/:username ───────────────────────────────────────
 exports.getProfile = async (req, res, next) => {
@@ -40,6 +41,14 @@ exports.updateProfile = async (req, res, next) => {
         updates[field] = req.body[field];
       }
     });
+
+    // Sanitize free-text fields
+    if (updates.bio !== undefined) updates.bio = stripHtml(updates.bio).slice(0, 300);
+
+    // Block dangerous tracker URLs
+    if (updates.trackerUrl !== undefined && !isAllowedUrl(updates.trackerUrl)) {
+      return res.status(400).json({ success: false, message: 'Invalid tracker URL' });
+    }
 
     // Check if profile is complete (either game)
     const user = await User.findById(req.user.id);
@@ -110,14 +119,16 @@ exports.findDuo = async (req, res, next) => {
     if (voiceChat) filter.voiceChatPreference = voiceChat;
     if (gender) filter.gender = gender;
 
-    const skip = (parseInt(page) - 1) * parseInt(limit);
+    const safePage = Math.max(1, Math.min(1000, parseInt(page) || 1));
+    const safeLimit = Math.max(1, Math.min(50, parseInt(limit) || 12));
+    const skip = (safePage - 1) * safeLimit;
 
     const [users, total] = await Promise.all([
       User.find(filter)
         .select('username avatar age gender rank region roles playstyleTags voiceChatPreference bio isOnline lastSeen duoRating favoriteAgents riotId riotVerified trackerUrl game lolRank lolRegion lolLanes favoriteChampions')
         .sort({ isOnline: -1, duoRating: -1 })
         .skip(skip)
-        .limit(parseInt(limit))
+        .limit(safeLimit)
         .lean(),
       User.countDocuments(filter),
     ]);
@@ -145,9 +156,9 @@ exports.findDuo = async (req, res, next) => {
       users: enriched,
       pagination: {
         total,
-        page: parseInt(page),
-        pages: Math.ceil(total / parseInt(limit)),
-        limit: parseInt(limit),
+        page: safePage,
+        pages: Math.ceil(total / safeLimit),
+        limit: safeLimit,
       },
     });
   } catch (error) {
@@ -280,6 +291,11 @@ exports.uploadAvatar = async (req, res, next) => {
     const { avatar } = req.body;
     if (!avatar || !avatar.startsWith('data:image/')) {
       return res.status(400).json({ success: false, message: 'Invalid image data' });
+    }
+    // Reject avatars over ~1MB (base64 data portion)
+    const base64Data = avatar.split(',')[1] || '';
+    if (base64Data.length > 1_400_000) {
+      return res.status(400).json({ success: false, message: 'Image too large. Maximum size is 1MB.' });
     }
 
     const updatedUser = await User.findByIdAndUpdate(

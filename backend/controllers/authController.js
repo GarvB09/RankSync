@@ -135,13 +135,20 @@ exports.logout = async (req, res, next) => {
 
 // ─── @GET /api/auth/google/callback ──────────────────────────────────────────
 exports.googleCallback = async (req, res) => {
-  // Passport attaches user after OAuth success
   try {
     const token = req.user.getSignedJwtToken();
     const clientURL = process.env.CLIENT_URL || 'http://localhost:3000';
 
-    // Redirect to frontend with token
-    res.redirect(`${clientURL}/auth/oauth-success?token=${token}`);
+    // Set token as httpOnly cookie (not in URL to avoid logs/history)
+    res.cookie('token', token, {
+      expires: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+    });
+
+    // Pass token in hash fragment (not query string — not sent to server, not in Referer)
+    res.redirect(`${clientURL}/auth/oauth-success#token=${token}`);
   } catch (error) {
     const clientURL = process.env.CLIENT_URL || 'http://localhost:3000';
     res.redirect(`${clientURL}/login?error=oauth_failed`);

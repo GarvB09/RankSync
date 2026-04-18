@@ -9,6 +9,20 @@ const User = require('../models/User');
 // Track connected users: userId -> Set of socketIds
 const onlineUsers = new Map();
 
+// Per-user message rate limiting: userId -> timestamps of recent messages
+const msgTimestamps = new Map();
+const MSG_LIMIT = 20;     // max messages
+const MSG_WINDOW = 30000; // per 30 seconds
+
+function isMessageRateLimited(userId) {
+  const now = Date.now();
+  const times = (msgTimestamps.get(userId) || []).filter((t) => now - t < MSG_WINDOW);
+  if (times.length >= MSG_LIMIT) return true;
+  times.push(now);
+  msgTimestamps.set(userId, times);
+  return false;
+}
+
 /**
  * Authenticate socket connection via JWT
  */
@@ -20,7 +34,7 @@ const authenticateSocket = async (socket, next) => {
 
     if (!token) return next(new Error('Authentication required'));
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     const user = await User.findById(decoded.id).select('username avatar rank isOnline');
 
     if (!user) return next(new Error('User not found'));
@@ -86,10 +100,14 @@ const initializeSocket = (io) => {
 
     // ── Real-time message relay (for instant delivery before REST confirms) ──
     socket.on('send_message', ({ conversationId, content, tempId }) => {
-      // Echo to other participants in the conversation room
+      if (isMessageRateLimited(userId)) {
+        socket.emit('error', { message: 'Sending messages too fast. Please slow down.' });
+        return;
+      }
+      const safeContent = typeof content === 'string' ? content.slice(0, 1000) : '';
       socket.to(`conversation:${conversationId}`).emit('message_received', {
         conversationId,
-        content,
+        content: safeContent,
         sender: { _id: userId, username: socket.user.username, avatar: socket.user.avatar },
         tempId,
         createdAt: new Date().toISOString(),
@@ -107,8 +125,8 @@ const initializeSocket = (io) => {
       if (userSockets) {
         userSockets.delete(socket.id);
         if (userSockets.size === 0) {
-          // No more active connections — user is truly offline
           onlineUsers.delete(userId);
+          msgTimestamps.delete(userId);
           await User.findByIdAndUpdate(userId, {
             isOnline: false,
             lastSeen: Date.now(),

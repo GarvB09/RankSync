@@ -1,19 +1,22 @@
 // OAuthSuccessPage.jsx
 import { useEffect } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import useAuthStore from '../context/authStore';
 
 export default function OAuthSuccessPage() {
-  const [params] = useSearchParams();
   const navigate = useNavigate();
   const { setToken, refreshUser } = useAuthStore();
 
   useEffect(() => {
-    const token = params.get('token');
+    // Token is passed as a hash fragment (#token=...) to avoid appearing in server logs
+    const hash = window.location.hash.slice(1);
+    const token = new URLSearchParams(hash).get('token');
+
     if (token) {
+      // Clear hash from URL so token doesn't linger in browser history
+      window.history.replaceState(null, '', window.location.pathname);
       setToken(token);
-      refreshUser().then((state) => {
-        // Check if Google user still needs to choose a username
+      refreshUser().then(() => {
         const user = useAuthStore.getState().user;
         if (user?.needsUsername) {
           navigate('/setup-username', { replace: true });
