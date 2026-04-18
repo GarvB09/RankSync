@@ -2,7 +2,37 @@
   "permissions": {
     "allow": [
       "Bash(node backend/utils/migrateRegions.js)",
-      "Bash(node -e ':*)"
+      "Bash(node -e ':*)",
+      "Bash(npm run *)",
+      "Bash(git add *)",
+      "Bash(git commit *)",
+      "Bash(git status)",
+      "Bash(git diff *)"
+    ]
+  },
+  "hooks": {
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /c/Users/garvb/Downloads/find-your-duo/find-your-duo && git add -u 2>/dev/null || true",
+            "statusMessage": "Staging changes..."
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "cd /c/Users/garvb/Downloads/find-your-duo/find-your-duo && git diff --staged --quiet 2>/dev/null || git commit -m \"chore: auto-sync $(git diff --staged --name-only 2>/dev/null | head -5 | tr '\\n' ' ' | sed 's/ $//')\" 2>/dev/null || true",
+            "statusMessage": "Committing changes to git..."
+          }
+        ]
+      }
     ]
   }
 }
