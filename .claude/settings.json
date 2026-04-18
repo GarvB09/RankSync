@@ -28,7 +28,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "cd /c/Users/garvb/Downloads/find-your-duo/find-your-duo && git diff --staged --quiet 2>/dev/null || git commit -m \"chore: auto-sync $(git diff --staged --name-only 2>/dev/null | head -5 | tr '\\n' ' ' | sed 's/ $//')\" 2>/dev/null || true",
+            "command": "cd /c/Users/garvb/Downloads/find-your-duo/find-your-duo && git diff --staged --quiet 2>/dev/null || (git commit -m \"chore: auto-sync $(git diff --staged --name-only 2>/dev/null | head -5 | tr '\\n' ' ' | sed 's/ $//')\" && git push origin master) 2>/dev/null || true",
             "statusMessage": "Committing changes to git..."
           }
         ]
