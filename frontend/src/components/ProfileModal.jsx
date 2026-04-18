@@ -165,7 +165,12 @@ export default function ProfileModal({ username, onClose, currentUserId, connect
 
                       {/* Name + meta */}
                       <div className="flex-1 min-w-0">
-                        <h2 className="font-display font-bold text-2xl truncate">{profile.username}</h2>
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <h2 className="font-display font-bold text-2xl truncate">{profile.username}</h2>
+                          {profile.game !== 'lol' && !profile.riotVerified && profile.createdAt && (Date.now() - new Date(profile.createdAt) > 7 * 86400000) && (
+                            <span title="Riot account not verified" className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-300 text-amber-600 font-semibold whitespace-nowrap">⚠ Unverified</span>
+                          )}
+                        </div>
                         {profile.riotId?.gameName && (
                           <div className="text-xs font-mono mt-0.5" style={{ color: 'var(--pp-muted)' }}>
                             {profile.riotId.gameName}#{profile.riotId.tagLine}

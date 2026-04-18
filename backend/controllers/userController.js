@@ -125,7 +125,7 @@ exports.findDuo = async (req, res, next) => {
 
     const [users, total] = await Promise.all([
       User.find(filter)
-        .select('username avatar age gender rank region roles playstyleTags voiceChatPreference bio isOnline lastSeen duoRating favoriteAgents riotId riotVerified trackerUrl game lolRank lolRegion lolLanes favoriteChampions')
+        .select('username avatar age gender rank region roles playstyleTags voiceChatPreference bio isOnline lastSeen duoRating favoriteAgents riotId riotVerified trackerUrl game lolRank lolRegion lolLanes favoriteChampions createdAt')
         .sort({ isOnline: -1, duoRating: -1 })
         .skip(skip)
         .limit(safeLimit)

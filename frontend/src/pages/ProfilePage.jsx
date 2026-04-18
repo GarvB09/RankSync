@@ -126,6 +126,9 @@ export default function ProfilePage() {
               }`}>
                 {profile.isOnline ? '● Online' : `⚫ ${formatLastSeen(profile.lastSeen)}`}
               </span>
+              {profile.game !== 'lol' && !profile.riotVerified && profile.createdAt && (Date.now() - new Date(profile.createdAt) > 7 * 86400000) && (
+                <span title="Riot account not verified" className="text-xs px-2 py-0.5 rounded-full bg-amber-50 border border-amber-300 text-amber-600 font-semibold whitespace-nowrap">⚠ Unverified</span>
+              )}
             </div>
             {profile.riotId?.gameName && (
               <div className="text-sm text-gray-400 font-mono mt-0.5">

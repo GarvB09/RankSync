@@ -347,6 +347,9 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
           <div className="flex items-center gap-2 flex-wrap">
             <h3 className="font-display font-bold text-gray-900 text-lg leading-tight cursor-pointer hover:text-pp-orange transition-colors" onClick={() => onViewProfile(player.username)}>{player.username}</h3>
             {!player.isOnline && <span className="text-xs text-gray-400">{formatLastSeen(player.lastSeen)}</span>}
+            {player.game !== 'lol' && !player.riotVerified && player.createdAt && (Date.now() - new Date(player.createdAt) > 7 * 86400000) && (
+              <span title="Riot account not verified" className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-50 border border-amber-300 text-amber-600 font-semibold whitespace-nowrap">⚠ Unverified</span>
+            )}
             {player.trackerUrl && (
               <a
                 href={player.trackerUrl}
