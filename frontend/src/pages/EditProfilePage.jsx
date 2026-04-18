@@ -9,7 +9,7 @@ import api, { API_URL } from '../utils/api';
 import {
   RANKS, REGIONS, REGION_FLAGS, ROLES, PLAYSTYLES, AGENTS, getRankColorClass, getRankEmoji, getAgentIcon,
   LOL_RANKS, LOL_REGIONS, LOL_REGION_NAMES, LOL_LANES, LOL_CHAMPIONS,
-  getLolChampionIcon, getLolChampionDisplay, getLolLaneIcon,
+  getLolChampionIcon, getLolChampionDisplay, getLolLaneIconUrl,
 } from '../utils/rankUtils';
 import toast from 'react-hot-toast';
 
@@ -375,7 +375,8 @@ export default function EditProfilePage() {
                         ? 'bg-blue-50 border-blue-400 text-blue-700'
                         : 'border-pp-border text-gray-500 hover:border-blue-400 hover:text-blue-600'
                     }`}>
-                    {getLolLaneIcon(lane)} {lane}
+                    <img src={getLolLaneIconUrl(lane)} alt={lane} className="w-5 h-5 object-contain" onError={(e) => { e.target.style.display='none'; }} />
+                    {lane}
                   </button>
                 ))}
               </div>

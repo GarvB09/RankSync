@@ -9,7 +9,7 @@ import {
   RANKS, REGIONS, REGION_FLAGS, ROLES, PLAYSTYLES, getRegionFlagUrl,
   getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, formatLastSeen,
   LOL_RANKS, LOL_REGIONS, LOL_REGION_NAMES, LOL_LANES, getLolRegionFlagUrl,
-  getLolRankColorClass, getLolRankIcon, getLolLaneIcon, getLolChampionIcon, getLolChampionDisplay,
+  getLolRankColorClass, getLolRankIcon, getLolLaneIconUrl, getLolChampionIcon, getLolChampionDisplay,
 } from '../utils/rankUtils';
 import RankIcon from '../components/RankIcon';
 import ProfileModal from '../components/ProfileModal';
@@ -386,8 +386,9 @@ function PlayerCard({ player, onRequest, onFistbump, index, likesLeft, fistbumpU
           {player.game === 'lol' ? (
             <>
               {player.lolLanes?.slice(0, 3).map((lane) => (
-                <span key={lane} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full">
-                  {getLolLaneIcon(lane)} {lane}
+                <span key={lane} className="text-xs bg-blue-50 text-blue-700 border border-blue-200 px-2 py-0.5 rounded-full flex items-center gap-1">
+                  <img src={getLolLaneIconUrl(lane)} alt={lane} className="w-3.5 h-3.5 object-contain" onError={(e) => { e.target.style.display='none'; }} />
+                  {lane}
                 </span>
               ))}
               {player.favoriteChampions?.slice(0, 2).map((key) => (
@@ -512,8 +513,9 @@ function FilterPanel({ filters, onChange, onReset, game }) {
                     onChange={() => set('lane', filters.lane === lane ? '' : lane)}
                     className="accent-pp-orange"
                   />
-                  <span className="text-xs text-gray-500 group-hover:text-gray-900 transition-colors">
-                    {getLolLaneIcon(lane)} {lane}
+                  <span className="text-xs text-gray-500 group-hover:text-gray-900 transition-colors flex items-center gap-1.5">
+                    <img src={getLolLaneIconUrl(lane)} alt={lane} className="w-4 h-4 object-contain" onError={(e) => { e.target.style.display='none'; }} />
+                    {lane}
                   </span>
                 </label>
               ))}

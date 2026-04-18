@@ -279,7 +279,17 @@ export const getLolRankIcon = (rank) => {
   return `https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-shared-components/global/default/images/ranked-mini-crests/${tier}.png`;
 };
 
-export const getLolLaneIcon = (lane) => {
-  const map = { Top: '🛡️', Jungle: '🌲', Mid: '⚔️', ADC: '🏹', Support: '💊', Fill: '🔄' };
-  return map[lane] || '🎮';
+const LOL_LANE_ICON_BASE = 'https://raw.communitydragon.org/latest/plugins/rcp-fe-lol-clash/global/default/assets/images/position-selector/positions';
+const LOL_LANE_ICON_FILES = {
+  Top: 'icon-position-top.png',
+  Jungle: 'icon-position-jungle.png',
+  Mid: 'icon-position-middle.png',
+  ADC: 'icon-position-bottom.png',
+  Support: 'icon-position-utility.png',
+  Fill: 'icon-position-fill.png',
+};
+
+export const getLolLaneIconUrl = (lane) => {
+  const file = LOL_LANE_ICON_FILES[lane];
+  return file ? `${LOL_LANE_ICON_BASE}/${file}` : null;
 };

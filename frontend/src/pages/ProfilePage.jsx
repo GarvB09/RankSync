@@ -10,7 +10,7 @@ import api, { API_URL } from '../utils/api';
 import {
   getRankColorClass, getRankEmoji, getRankIcon, getRoleIcon, getRegionFlagUrl, formatLastSeen, getAgentIcon,
   getLolRankColorClass, getLolRankIcon, getLolRegionFlagUrl, LOL_REGION_NAMES,
-  getLolLaneIcon, getLolChampionIcon, getLolChampionDisplay,
+  getLolLaneIconUrl, getLolChampionIcon, getLolChampionDisplay,
 } from '../utils/rankUtils';
 
 function LolRankIcon({ rank, size = 'w-8 h-8' }) {
@@ -206,8 +206,9 @@ export default function ProfilePage() {
               <div className="text-xs text-gray-400 uppercase tracking-wider mb-2">Lanes</div>
               <div className="flex flex-wrap gap-2">
                 {profile.lolLanes.map((lane) => (
-                  <span key={lane} className="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full text-sm text-blue-700 font-medium">
-                    {getLolLaneIcon(lane)} {lane}
+                  <span key={lane} className="px-3 py-1.5 bg-blue-50 border border-blue-200 rounded-full text-sm text-blue-700 font-medium flex items-center gap-1.5">
+                    <img src={getLolLaneIconUrl(lane)} alt={lane} className="w-5 h-5 object-contain" onError={(e) => { e.target.style.display='none'; }} />
+                    {lane}
                   </span>
                 ))}
               </div>

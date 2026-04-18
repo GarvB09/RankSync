@@ -10,7 +10,7 @@ import {
   getRankColorClass, getRankEmoji,
   getRoleIcon, getRegionFlagUrl, formatLastSeen, getAgentIcon,
   getLolRankColorClass, getLolRankIcon, getLolRegionFlagUrl, LOL_REGION_NAMES,
-  getLolLaneIcon, getLolChampionIcon, getLolChampionDisplay,
+  getLolLaneIconUrl, getLolChampionIcon, getLolChampionDisplay,
 } from '../utils/rankUtils';
 import RankIcon from './RankIcon';
 
@@ -282,8 +282,9 @@ export default function ProfileModal({ username, onClose, currentUserId, connect
                         {profile.game === 'lol' && profile.lolLanes?.length > 0 && (
                           <div className="flex flex-wrap gap-1.5">
                             {profile.lolLanes.map((lane) => (
-                              <span key={lane} className="text-xs px-3 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-blue-700 font-medium">
-                                {getLolLaneIcon(lane)} {lane}
+                              <span key={lane} className="text-xs px-3 py-1.5 rounded-full border border-blue-200 bg-blue-50 text-blue-700 font-medium flex items-center gap-1.5">
+                                <img src={getLolLaneIconUrl(lane)} alt={lane} className="w-4 h-4 object-contain" onError={(e) => { e.target.style.display='none'; }} />
+                                {lane}
                               </span>
                             ))}
                           </div>
