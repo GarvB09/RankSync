@@ -55,7 +55,7 @@ exports.updateProfile = async (req, res, next) => {
     const merged = { ...user.toObject(), ...updates };
     const isComplete = merged.game === 'lol'
       ? !!(merged.lolRank && merged.lolRegion && merged.lolLanes?.length > 0)
-      : !!(merged.riotId?.gameName && merged.rank && merged.region && merged.roles?.length > 0);
+      : !!(merged.rank && merged.region && merged.roles?.length > 0);
     updates.isProfileComplete = isComplete;
 
     const updatedUser = await User.findByIdAndUpdate(
