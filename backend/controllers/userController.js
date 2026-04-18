@@ -84,7 +84,8 @@ exports.findDuo = async (req, res, next) => {
       isProfileComplete: true,
       isHidden: { $ne: true },
       connections: { $nin: [req.user.id] },
-      game,
+      // null matches existing users who predate the game field
+      game: game === 'valorant' ? { $in: ['valorant', null] } : game,
     };
 
     if (game === 'lol') {
