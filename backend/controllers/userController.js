@@ -42,6 +42,11 @@ exports.updateProfile = async (req, res, next) => {
       }
     });
 
+    // Convert empty strings to null for enum fields (Mongoose rejects "" as invalid enum)
+    ['region', 'gender', 'lolRank', 'lolRegion', 'rank', 'preferredRankMin', 'preferredRankMax'].forEach((field) => {
+      if (updates[field] === '') updates[field] = null;
+    });
+
     // Sanitize free-text fields
     if (updates.bio !== undefined) updates.bio = stripHtml(updates.bio).slice(0, 300);
 
