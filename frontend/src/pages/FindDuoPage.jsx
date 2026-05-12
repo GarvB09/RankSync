@@ -15,8 +15,8 @@ import RankIcon from '../components/RankIcon';
 import ProfileModal from '../components/ProfileModal';
 import useAuthStore from '../context/authStore';
 import toast from 'react-hot-toast';
+import { DAILY_LIKE_LIMIT, getTodayLikes, incrementLike } from '../utils/connectLimit';
 
-const DAILY_LIKE_LIMIT = 5;
 const PASS_HIDE_MS = 48 * 60 * 60 * 1000;
 
 // ─── localStorage helpers ─────────────────────────────────────────────────────
@@ -36,21 +36,6 @@ function passProfile(userId) {
   const passed = getPassedProfiles();
   passed[userId] = Date.now();
   localStorage.setItem('playpair-passed', JSON.stringify(passed));
-}
-
-function getTodayLikes() {
-  try {
-    const stored = JSON.parse(localStorage.getItem('playpair-likes') || '{}');
-    const today = new Date().toDateString();
-    return stored.date === today ? (stored.count || 0) : 0;
-  } catch { return 0; }
-}
-
-function incrementLike() {
-  const today = new Date().toDateString();
-  const count = getTodayLikes() + 1;
-  localStorage.setItem('playpair-likes', JSON.stringify({ date: today, count }));
-  return count;
 }
 
 function getWeekStart() {

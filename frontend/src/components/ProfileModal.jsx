@@ -20,6 +20,7 @@ function LolRankIcon({ rank, size = 'w-7 h-7' }) {
   return <img src={src} alt={rank} className={`${size} object-contain`} onError={(e) => { e.target.style.display = 'none'; }} />;
 }
 import toast from 'react-hot-toast';
+import { hasLikesLeft, incrementLike, DAILY_LIKE_LIMIT, getTodayLikes } from '../utils/connectLimit';
 
 export default function ProfileModal({ username, onClose, currentUserId, connections, sentRequests }) {
   const navigate = useNavigate();
@@ -53,8 +54,13 @@ export default function ProfileModal({ username, onClose, currentUserId, connect
   }, [onClose]);
 
   const handleRequest = async () => {
+    if (!hasLikesLeft()) {
+      toast.error(`No connects left today! Come back tomorrow 🎮`);
+      return;
+    }
     try {
       await api.post(`/users/request/${profile._id}`);
+      incrementLike();
       setRequestStatus('pending_sent');
       toast.success('Duo request sent! 🎮');
     } catch (err) {
